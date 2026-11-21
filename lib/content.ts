@@ -1,3 +1,6 @@
+import { home, features } from "./home";
+export { features } from "./home";
+
 export type ContentBlock =
   | { kind: "paragraph"; text: string }
   | { kind: "heading"; text: string }
@@ -18,29 +21,6 @@ export type PublicDocument = {
 };
 
 const updated = "2026-11-21";
-export const features = [
-  {
-    title: "Find the thing you copied.",
-    text: "Search saved text, links, images and file references. Filter by kind or time, and keep useful items pinned.",
-    symbol: "search",
-  },
-  {
-    title: "Set files down for a moment.",
-    text: "Drop files onto the edge shelf, group them into a stack, then drag them into the next app.",
-    symbol: "shelf",
-  },
-  {
-    title: "Keep the words you reuse.",
-    text: "Write and edit text snippets, add a note, and find them again without hunting through documents.",
-    symbol: "text",
-  },
-  {
-    title: "An undo you can come back to.",
-    text: "Recover the last 20 manual delete or clear actions, even after quitting Kopy and restarting your Mac.",
-    symbol: "undo",
-  },
-];
-
 export const documents: PublicDocument[] = [
   {
     path: "/",
@@ -50,29 +30,29 @@ export const documents: PublicDocument[] = [
     updated,
     category: "product",
     blocks: [
-      {
-        kind: "paragraph",
-        text: "A little shelf for everything between apps. Keep the things you copy close, and carry files into your next task. Kopy is a native macOS clipboard history and file shelf.",
-      },
-      { kind: "heading", text: "Made for the in-between" },
+      { kind: "paragraph", text: home.availability },
+      { kind: "paragraph", text: home.description },
+      { kind: "paragraph", text: home.note },
+      { kind: "heading", text: home.featuresTitle.join(" ") },
+      { kind: "paragraph", text: home.featuresIntroduction },
       ...features.flatMap((feature): ContentBlock[] => [
         { kind: "heading", text: feature.title },
         { kind: "paragraph", text: feature.text },
       ]),
-      { kind: "heading", text: "Your clipboard stays on your Mac" },
+      { kind: "heading", text: home.workflowTitle.join(" ") },
       {
-        kind: "paragraph",
-        text: "History is encrypted locally, with its key in your Mac’s Keychain. Kopy has no cloud sync or customer account. Direct-download licences use Dodo Payments; licence checks and user-requested image downloads make network requests.",
+        kind: "steps",
+        items: home.workflowSteps.map((step) => `${step.title} ${step.text}`),
       },
-      { kind: "heading", text: "One small purchase" },
-      {
-        kind: "paragraph",
-        text: "The planned direct-download price is $2.99 USD, paid once. One active Mac, transferable by deactivating the old Mac. The website is in prelaunch testing: no signed public download or live checkout is available yet.",
-      },
-      {
-        kind: "paragraph",
-        text: "Kopy requires macOS 14 or later. The Mac App Store build copies a selected item for manual Command-V. The direct build additionally offers optional automatic paste with macOS permission. File and image cards support dragging out; saved text uses copy/paste.",
-      },
+      { kind: "heading", text: home.privacyTitle.join(" ") },
+      { kind: "paragraph", text: home.privacy },
+      { kind: "heading", text: home.faqTitle },
+      ...home.faqs.flatMap((faq): ContentBlock[] => [
+        { kind: "heading", text: faq.question },
+        { kind: "paragraph", text: faq.answer },
+      ]),
+      { kind: "heading", text: home.closingTitle },
+      { kind: "paragraph", text: home.closing },
       {
         kind: "links",
         links: [

@@ -1,5 +1,7 @@
 name: Check public site
 on:
+  schedule:
+    - cron: "17 3 * * *"
   workflow_dispatch:
     inputs:
       site_url:
@@ -23,4 +25,4 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec tsx scripts/check-live-site.ts
         env:
-          CHECK_SITE_URL: ${{ inputs.site_url }}
+          CHECK_SITE_URL: ${{ inputs.site_url || vars.SITE_URL || 'https://kopy-website.vercel.app' }}

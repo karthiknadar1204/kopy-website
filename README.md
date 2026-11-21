@@ -10,7 +10,7 @@ pnpm dev
 pnpm check
 ```
 
-Node 22 and pnpm 10.26.2 are used in CI. `pnpm check` runs ESLint, TypeScript, meaningful configuration/content tests and a production build. The separate manual `Check public site` workflow checks deployed HTML, Markdown, sitemap, robots and image routes. It does not create a recurring schedule or a Codex automation.
+Node 22 and pnpm 10.26.2 are used in CI. `pnpm check` runs ESLint, TypeScript, meaningful configuration/content tests and a production build. The separate `Check public site` workflow runs daily at 03:17 UTC and can also be started manually. It checks deployed HTML, Markdown, sitemap, robots, canonical paths, internal links and preview noindex directives. Set the repository variable `SITE_URL` if the production host changes. GitHub Actions notifications depend on the owner’s notification settings; this workflow does not prove email delivery. It does not create a Codex automation.
 
 ## Configuration
 
@@ -26,12 +26,12 @@ Never place a private API key in `NEXT_PUBLIC_*`, browser code, the repository, 
 
 - `app/`: public Next.js pages and machine-readable routes.
 - `components/`: shared navigation, article rendering and native-style icons.
-- `lib/content.ts`: the typed public content registry. Article HTML and Markdown use this same source.
+- `lib/content.ts`: the typed public content registry. Article HTML and Markdown use this same source. `lib/home.ts` supplies homepage copy to both renderings.
 - `lib/site.ts`: origin validation, prelaunch settings and test-checkout allowlist.
 - `public/images/`: the existing Kopy app icon and screenshots rendered from fixture content. No real clipboard history is included.
 - `tests/`: checkout/origin boundary tests and content/link consistency.
 
-Public documents: home, privacy, support, terms, changelog, guides hub and two practical guides. `.md` routes are explicit rewrites to a public-only Markdown handler. HTML stays the default. Markdown has canonical HTML links and `noindex`; it is excluded from the sitemap. The registry produces `llms.txt` and `llms-full.txt`. There is no private-page export, client analytics, Google login or customer database.
+Public documents: home, privacy, support, terms, changelog, guides hub and two practical guides. `.md` routes are explicit rewrites to a public-only Markdown handler. HTML stays the default. Markdown has canonical HTML links and `noindex`; it is excluded from the sitemap. The registry produces `llms.txt` and `llms-full.txt`. There is no private-page export, client analytics, Google login or customer database. `/purchase-complete` is a noindex, generic checkout-return page: URL parameters never establish payment or licensing state.
 
 ## Design
 

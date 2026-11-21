@@ -78,6 +78,7 @@ test("the public document registry has unique routes and only links to existing 
     "/buy",
     "/.env.local",
     "/licences",
+    "/purchase-complete",
   ])
     assert.equal(documentAt(privatePath), undefined);
 });
