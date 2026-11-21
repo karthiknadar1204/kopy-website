@@ -86,30 +86,32 @@ export const features = [
 ];
 
 export const comparison = {
-  label: "Why Kopy if your Mac has clipboard history?",
-  title: "Collect files. Reuse text. Move between apps.",
+  label: "Kopy vs. Spotlight Clipboard",
+  title: "Why Kopy if your Mac has clipboard history?",
   introduction:
-    "Spotlight helps you find what you copied. Kopy gives you a shelf to work from: drop files into a stack, switch apps, then drag them where you need them. Save and edit the text you use often, and keep important items pinned.",
+    "Spotlight gives you a history of what you copied. Kopy gives you a shelf for what you’re working on: files to move, snippets to reuse and useful items to keep close.",
+  spotlightSummary: "Find something you copied.",
+  kopySummary: "Collect, organise and reuse it.",
   rows: [
     {
       task: "Find a recent copy",
       spotlight: "Search recent copies",
-      kopy: "Search by content, then filter by kind or time",
+      kopy: "Search history by content, kind or time",
     },
     {
       task: "Move files between apps",
       spotlight: "Copy and paste",
-      kopy: "Collect files on the edge, stack them, then drag into the next app",
+      kopy: "Collect files on the edge, group into stacks and drag into the next app",
     },
     {
       task: "Reuse your words",
       spotlight: "Copy a previous item",
-      kopy: "Write, edit and pin snippets for replies, notes and more",
+      kopy: "Create, edit and pin reusable text snippets",
     },
     {
       task: "Keep things organised",
       spotlight: "Search the history",
-      kopy: "Keep useful items pinned, add notes and group files into stacks",
+      kopy: "Pin important items, add notes and group files",
     },
     {
       task: "Recover a manual clear",
@@ -125,6 +127,7 @@ export const comparison = {
   note: "Comparing Spotlight’s Clipboard view with Kopy’s current build, checked November 21, 2026. Apple’s column follows its published Clipboard guide; undocumented controls are not claims about every macOS app. Kopy’s recovery is bounded, and file references still depend on their originals.",
   conclusion:
     "Build a stack of files for an email. Pin a reply you use every day. Switch windows without gathering everything again.",
+  takeawayTitle: "Make the next handoff easier.",
   source: {
     label: "Apple’s Clipboard guide",
     href: "https://support.apple.com/guide/mac-help/mchl40d5b86b/mac",

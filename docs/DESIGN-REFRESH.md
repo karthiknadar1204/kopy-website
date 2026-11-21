@@ -11,6 +11,7 @@ Primary references reviewed:
 - [Cove](https://heycove.app/): the full homepage’s product-led progression, large desktop hero, full shelf and clipboard panels, feature sections, comparison, pricing, FAQ and support. Browser review covered the desktop/notch interaction, shelf/Vault controls, clipboard search, pricing and closing sections. The useful pattern is a detailed product surface with direct interaction, not a tiny illustrative substitute.
 - [Aceternity MacBook Scroll](https://ui.aceternity.com/components/macbook-scroll): device silhouette, bezel, display and presentation scale. The component was reviewed in the browser and in its official documentation.
 - [Aceternity Container Scroll](https://ui.aceternity.com/components/container-scroll-animation): a large product surface as the focal point. Do not add perspective during an active drag, which would complicate pointer geometry.
+- [Craft vs Notion](https://www.craft.do/compare/notion): prominent product identification, side-by-side decision cards and a feature matrix. [Plausible vs Google Analytics](https://plausible.io/vs-google-analytics): a direct comparison near the top of the page. These references informed the comparison layout, not its product claims.
 - Earlier product references include Dropover, Paste, CleanShot, Raycast, Craft and Screen Studio. Keep their useful emphasis on the product without copying assets, claims or content.
 
 No competitor code, images, testimonials, logos, usage figures or marketing claims are included. The device shell, vector wallpaper and sample moodboard are local source assets; no new UI or animation dependency is required.
@@ -41,6 +42,8 @@ The desktop scene uses a 1280×800 design surface scaled inside the device. Open
 This is a browser rendering of Kopy’s interface with sample data. It does not execute the SwiftUI app, access private clipboard history or files, request macOS permissions, send email, upload attachments, or persist visitor content. Original app screenshots remain below so visitors can inspect the native product itself. No Apple signing, App Store submission, live payments or indexing settings change in this task.
 
 The Spotlight comparison still uses Apple’s documented Clipboard workflow and Kopy’s native capabilities. Avoid unverified retention limits or claims about every macOS app. Keep comparison copy shared between HTML and Markdown. Source: https://support.apple.com/guide/mac-help/mchl40d5b86b/mac .
+
+The comparison gives the question its main heading, followed by distinct product headers and six workflow rows. Kopy has a dark header and tinted capability column. Phones show each feature above a pair of labelled product cells. A Try the shelf link returns to the interactive desktop. The component has scoped styles, and the old global comparison rules have been removed.
 
 ## Verification
 

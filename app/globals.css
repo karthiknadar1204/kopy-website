@@ -337,8 +337,7 @@ kbd {
   margin-bottom: 45px;
 }
 .section-intro h2,
-.workflow h2,
-.comparison h2 {
+.workflow h2 {
   font-size: 43px;
   letter-spacing: -1.9px;
   font-weight: 620;
@@ -465,94 +464,6 @@ kbd {
 }
 .full-view img {
   width: 100%;
-}
-.comparison-intro {
-  max-width: 700px;
-  margin-bottom: 34px;
-}
-.comparison h2 {
-  max-width: 650px;
-}
-.comparison-intro > p:last-child {
-  color: var(--muted);
-  font-size: 16px;
-  line-height: 1.8;
-  margin-top: 20px;
-  max-width: 650px;
-}
-.comparison-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  font-size: 14px;
-  line-height: 1.65;
-  table-layout: fixed;
-}
-.comparison-table th,
-.comparison-table td {
-  padding: 19px 23px;
-  text-align: left;
-  vertical-align: middle;
-  border-bottom: 1px solid var(--line);
-  overflow-wrap: break-word;
-}
-.comparison-table thead th {
-  font-weight: 600;
-  color: var(--ink);
-  padding-block: 22px;
-  border-top: 1px solid var(--line);
-}
-.comparison-table thead th:first-child {
-  width: 30%;
-  color: var(--muted);
-  font-size: 13px;
-}
-.comparison-table th[scope="row"] {
-  font-weight: 550;
-}
-.comparison-table td:nth-child(2) {
-  color: var(--muted);
-}
-.comparison-table th:last-child,
-.comparison-table td:last-child {
-  background: #f9ede8;
-  border-bottom-color: #eadbd4;
-  color: #703c2c;
-}
-.comparison-table thead th:last-child {
-  border-radius: 13px 13px 0 0;
-  border-top-color: #eadbd4;
-}
-.comparison-table tbody tr:last-child td:last-child {
-  border-radius: 0 0 13px 13px;
-}
-.comparison-product {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  font-size: 15px;
-}
-.comparison-product img {
-  border-radius: 6px;
-}
-.comparison-bottom {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 65px;
-  padding-top: 25px;
-}
-.comparison-conclusion {
-  font-size: 16px;
-  line-height: 1.75;
-  max-width: 490px;
-}
-.comparison-note {
-  font-size: 12px;
-  line-height: 1.85;
-  color: var(--muted);
-}
-.comparison-note a {
-  text-underline-offset: 3px;
 }
 .privacy-section {
   display: flex;
@@ -960,8 +871,7 @@ kbd {
   .feature-list {
     gap: 25px;
   }
-  .section-intro h2,
-  .comparison h2 {
+  .section-intro h2 {
     font-size: 38px;
   }
   .workflow {
@@ -971,9 +881,6 @@ kbd {
   }
   .workflow h2 {
     font-size: 34px;
-  }
-  .comparison-bottom {
-    gap: 35px;
   }
   .buy-page {
     gap: 35px;
@@ -1042,10 +949,6 @@ kbd {
   }
   .full-view summary {
     padding-inline: 32px;
-  }
-  .comparison-table th,
-  .comparison-table td {
-    padding-inline: 17px;
   }
   .faq {
     gap: 40px;
@@ -1139,8 +1042,7 @@ kbd {
     display: block;
     margin-bottom: 30px;
   }
-  .section-intro h2,
-  .comparison h2 {
+  .section-intro h2 {
     font-size: 34px;
     letter-spacing: -1.4px;
   }
@@ -1187,50 +1089,6 @@ kbd {
   .full-view summary {
     padding: 18px 23px;
     font-size: 13px;
-  }
-  .comparison-intro {
-    margin-bottom: 25px;
-  }
-  .comparison-intro > p:last-child {
-    font-size: 15px;
-    line-height: 1.8;
-    margin-top: 17px;
-  }
-  .comparison-table {
-    font-size: 14px;
-    line-height: 1.65;
-  }
-  .comparison-table th,
-  .comparison-table td {
-    padding: 16px 10px;
-  }
-  .comparison-table thead th {
-    padding-block: 17px;
-  }
-  .comparison-table thead th:first-child {
-    width: 30%;
-    font-size: 12px;
-  }
-  .comparison-product {
-    flex-direction: column;
-    align-items: start;
-    gap: 7px;
-    font-size: 13px;
-    line-height: 1.4;
-  }
-  .comparison-table th[scope="row"] {
-    font-size: 14px;
-  }
-  .comparison-bottom {
-    grid-template-columns: 1fr;
-    gap: 17px;
-    padding-top: 22px;
-  }
-  .comparison-conclusion {
-    font-size: 15px;
-  }
-  .comparison-note {
-    font-size: 12px;
   }
   .privacy-section {
     display: block;

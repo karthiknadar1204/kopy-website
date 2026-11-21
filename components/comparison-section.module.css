@@ -1,0 +1,305 @@
+.section {
+  scroll-margin-top: 64px;
+}
+
+.introduction {
+  max-width: 940px;
+  margin: 0 auto 48px;
+  text-align: center;
+}
+
+.label {
+  color: var(--coral);
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.introduction h2 {
+  font-size: clamp(42px, 4.4vw, 62px);
+  font-weight: 650;
+  letter-spacing: -2.6px;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+.description {
+  max-width: 690px;
+  margin: 24px auto 0;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.75;
+}
+
+.matrix table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: left;
+}
+
+.matrix th,
+.matrix td {
+  padding: 23px 27px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+  overflow-wrap: anywhere;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.matrix .featureHeader {
+  width: 28%;
+  padding-left: 0;
+  font-size: 14px;
+  color: var(--muted);
+  font-weight: 500;
+  vertical-align: bottom;
+}
+
+.matrix thead th:not(:first-child) {
+  padding-block: 30px;
+  border-bottom: 0;
+  border-radius: 18px 18px 0 0;
+}
+
+.spotlightHeader {
+  background: var(--blue);
+}
+
+.kopyHeader {
+  background: var(--ink);
+  color: white;
+}
+
+.product {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 21px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.product img {
+  border-radius: 11px;
+  flex-shrink: 0;
+}
+
+.spotlightIcon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  background: white;
+  color: #53677f;
+  border-radius: 11px;
+}
+
+.productSummary {
+  margin-top: 16px;
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.kopyHeader .productSummary {
+  color: #e4c8bc;
+}
+
+.matrix tbody th {
+  padding-left: 0;
+  font-weight: 550;
+}
+
+.spotlightCell {
+  color: var(--muted);
+  background: #f6f8fb;
+}
+
+.matrix .kopyCell {
+  background: #fbefe9;
+  border-color: #eadbd4;
+  color: #773e2f;
+}
+
+.capability {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+}
+
+.capability svg {
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.matrix tbody tr:last-child td {
+  border-radius: 0 0 18px 18px;
+  border-bottom: 0;
+}
+
+.mobileLabel {
+  display: none;
+}
+
+.takeaway {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 35px;
+  padding: 33px 0;
+}
+
+.takeaway h3 {
+  font-size: 23px;
+  font-weight: 600;
+  letter-spacing: -.6px;
+}
+
+.takeaway p {
+  margin-top: 8px;
+  max-width: 670px;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.takeaway a {
+  flex-shrink: 0;
+}
+
+.source {
+  padding-top: 21px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.85;
+}
+
+.source a {
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 850px) {
+  .matrix th,
+  .matrix td {
+    padding: 20px 19px;
+  }
+  .product {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 13px;
+    font-size: 21px;
+  }
+  .takeaway {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 650px) {
+  .introduction {
+    text-align: left;
+    margin-bottom: 30px;
+  }
+  .label {
+    margin-bottom: 17px;
+    font-size: 14px;
+  }
+  .introduction h2 {
+    font-size: clamp(36px, 9.7vw, 48px);
+    letter-spacing: -1.6px;
+    line-height: 1.12;
+    text-wrap: pretty;
+  }
+  .description {
+    margin-top: 20px;
+    font-size: 16px;
+    line-height: 1.8;
+  }
+  .matrix table,
+  .matrix thead,
+  .matrix tbody {
+    display: block;
+  }
+  .matrix tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .matrix .featureHeader {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .matrix thead th:not(:first-child) {
+    padding: 22px 17px;
+    border-radius: 14px 14px 0 0;
+  }
+  .product {
+    min-height: 93px;
+    font-size: 18px;
+    gap: 12px;
+  }
+  .product img,
+  .spotlightIcon {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+  }
+  .productSummary {
+    margin-top: 12px;
+    font-size: 14px;
+  }
+  .matrix tbody th {
+    grid-column: 1 / -1;
+    padding: 22px 0 11px;
+    border: 0;
+    font-size: 16px;
+    line-height: 1.4;
+  }
+  .matrix td {
+    padding: 16px 17px 20px;
+    border: 0;
+    border-radius: 10px;
+    font-size: 14px;
+    line-height: 1.65;
+  }
+  .matrix .kopyCell {
+    border-radius: 10px;
+  }
+  .matrix tbody tr:last-child td {
+    border-radius: 10px;
+  }
+  .mobileLabel {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .capability {
+    gap: 7px;
+  }
+  .capability svg {
+    width: 16px;
+    height: 16px;
+    margin-top: 4px;
+  }
+  .takeaway {
+    flex-direction: column;
+    gap: 20px;
+    padding-block: 30px;
+  }
+  .takeaway h3 {
+    font-size: 21px;
+  }
+  .takeaway p {
+    font-size: 15px;
+  }
+}

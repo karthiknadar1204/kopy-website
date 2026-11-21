@@ -3,8 +3,9 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Icon } from "@/components/icon";
 import { HeroDemo } from "@/components/hero-demo";
+import { ComparisonSection } from "@/components/comparison-section";
 import { documentAt, features } from "@/lib/content";
-import { home, comparison } from "@/lib/home";
+import { home } from "@/lib/home";
 import { absolute, site } from "@/lib/site";
 
 const document = documentAt("/");
@@ -139,60 +140,7 @@ export default function Home() {
         </details>
       </section>
 
-      <section
-        className="comparison wrap section-space"
-        id="compare"
-        aria-labelledby="comparison-title"
-      >
-        <div className="comparison-intro">
-          <p className="section-label">{comparison.label}</p>
-          <h2 id="comparison-title">{comparison.title}</h2>
-          <p>{comparison.introduction}</p>
-        </div>
-        <table className="comparison-table">
-          <caption className="visually-hidden">
-            A workflow comparison of Spotlight Clipboard and Kopy
-          </caption>
-          <thead>
-            <tr>
-              <th scope="col">What you want to do</th>
-              <th scope="col">
-                <span className="comparison-product">
-                  <Icon name="search" size={18} />
-                  Spotlight Clipboard
-                </span>
-              </th>
-              <th scope="col">
-                <span className="comparison-product">
-                  <Image
-                    src="/images/kopy-icon.png"
-                    alt=""
-                    width={24}
-                    height={24}
-                  />
-                  Kopy
-                </span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {comparison.rows.map((row) => (
-              <tr key={row.task}>
-                <th scope="row">{row.task}</th>
-                <td>{row.spotlight}</td>
-                <td>{row.kopy}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <div className="comparison-bottom">
-          <p className="comparison-conclusion">{comparison.conclusion}</p>
-          <p className="comparison-note">
-            {comparison.note}{" "}
-            <a href={comparison.source.href}>{comparison.source.label}</a>.
-          </p>
-        </div>
-      </section>
+      <ComparisonSection />
 
       <section className="privacy-section wrap">
         <div className="privacy-symbol">

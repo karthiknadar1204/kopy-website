@@ -895,6 +895,12 @@
     font-size: 9px;
   }
 }
+@media (max-width: 1050px) {
+  .laptopBase {
+    width: calc(100% + 44px);
+    margin-left: -22px;
+  }
+}
 @media (max-width: 650px) {
   .demo {
     margin-top: 32px;

@@ -54,10 +54,15 @@ export const documents: PublicDocument[] = [
       },
       { kind: "heading", text: comparison.title },
       { kind: "paragraph", text: comparison.introduction },
+      {
+        kind: "paragraph",
+        text: `Spotlight Clipboard: ${comparison.spotlightSummary} Kopy: ${comparison.kopySummary}`,
+      },
       ...comparison.rows.map((row): ContentBlock => ({
         kind: "paragraph",
         text: `${row.task}. Spotlight Clipboard: ${row.spotlight}. Kopy: ${row.kopy}.`,
       })),
+      { kind: "heading", text: comparison.takeawayTitle },
       { kind: "paragraph", text: comparison.conclusion },
       { kind: "paragraph", text: comparison.note },
       {
