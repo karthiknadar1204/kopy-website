@@ -1,0 +1,26 @@
+name: Check public site
+on:
+  workflow_dispatch:
+    inputs:
+      site_url:
+        description: HTTPS website origin to check
+        required: true
+        default: https://kopy-website.vercel.app
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.26.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec tsx scripts/check-live-site.ts
+        env:
+          CHECK_SITE_URL: ${{ inputs.site_url }}
