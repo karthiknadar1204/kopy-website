@@ -1,2 +1,4 @@
 import { llmsIndex, textResponse } from "@/lib/discovery";
-export function GET() { return textResponse(llmsIndex()); }
+export function GET() {
+  return textResponse(llmsIndex());
+}
