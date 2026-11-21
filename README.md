@@ -35,9 +35,11 @@ Public documents: home, privacy, support, terms, changelog, guides hub and two p
 
 ## Design
 
-The site is a quiet frame around actual Kopy views. Cool paper `#f5f7f8`, graphite `#262d31`, slate `#65717a`, blue-grey `#e8eef2`, restrained coral `#a84632` and white `#ffffff` form the palette. System typography is intentional for a native Mac utility; the large, left-aligned headline sits beside a thin edge handle, and the actual product screenshot dominates the first scroll. Feature rows replace a repeated marketing-card grid. Legal and guide pages use a readable single column.
+The homepage puts a crop of Kopy's actual shelf beside its main promise, followed by feature summaries, a dark file-stack showcase, a sourced Spotlight comparison and readable privacy/purchase information. Porcelain #fbfcfe, graphite #24282f, slate #626b79, coral #a84632, lilac #e9eaf5 and pale blue #edf2f7 preserve the app's identity. System typography and tactile keycaps suit the native Mac utility. The complete fixture screenshot remains available through an expandable view.
 
-The first design pass considered a simulated draggable shelf and a screenshot-led page. The screenshot-led direction won because it explains the actual product without shipping a browser imitation that could misrepresent native behaviour. No testimonials, user counters, performance numbers or review scores are invented.
+Mobile navigation uses the browser's automatic popover for Escape/outside-click dismissal and closes on selection. Comparison copy has one source in lib/home.ts and appears in both HTML and Markdown. It compares Spotlight's documented Clipboard workflow, includes Apple's source, and does not invent retention limits, reviews or performance claims.
+
+See [design research and verification](docs/DESIGN-REFRESH.md) for the reference sites, composition decision and checks.
 
 ## Release boundaries
 

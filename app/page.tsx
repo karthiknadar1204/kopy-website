@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Icon } from "@/components/icon";
 import { documentAt, features } from "@/lib/content";
-import { home } from "@/lib/home";
+import { home, comparison } from "@/lib/home";
 import { absolute, site } from "@/lib/site";
 
 const document = documentAt("/");
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   title: { absolute: document?.title ?? "Kopy for Mac" },
   description: document?.description,
   alternates: { canonical: "/", types: { "text/markdown": "/index.md" } },
-  openGraph: { title: "Kopy — Everything between apps", url: "/" },
+  openGraph: { title: "Kopy — A little shelf for your Mac", url: "/" },
 };
 
 export default function Home() {
@@ -35,10 +35,7 @@ export default function Home() {
       />
       <section className="hero wrap">
         <div className="hero-copy">
-          <div className="availability">
-            <span />
-            {home.availability}
-          </div>
+          <p className="availability">{home.availability}</p>
           <h1>
             {home.title[0]}
             <br />
@@ -47,66 +44,66 @@ export default function Home() {
           <p className="hero-description">{home.description}</p>
           <div className="hero-actions">
             <Link className="button button-primary" href="/buy">
-              Get Kopy <span>{site.price}</span>
+              Explore Kopy <span>{site.price}</span>
             </Link>
             <a className="button button-secondary" href="#see-kopy">
-              See the shelf
+              See how it works
             </a>
           </div>
           <p className="hero-note">{home.note}</p>
-        </div>
-        <div className="hero-side">
-          <span className="edge-line" />
-          <p>
-            {home.aside[0]}
-            <br />
-            {home.aside[1]}
-            <br />
-            {home.aside[2]}
-          </p>
-          <div
-            className="shortcut"
-            aria-label="Default shortcut Control Option V"
-          >
-            <kbd>⌃</kbd>
-            <kbd>⌥</kbd>
-            <kbd>V</kbd>
+          <div className="hero-shortcut">
+            <div
+              className="shortcut"
+              aria-label="Default shortcut Control Option V"
+            >
+              <kbd>⌃</kbd>
+              <kbd>⌥</kbd>
+              <kbd>V</kbd>
+            </div>
+            <span>{home.shortcutCaption}</span>
           </div>
-          <span className="shortcut-caption">{home.shortcutCaption}</span>
         </div>
-      </section>
-      <section
-        className="product-preview wrap"
-        id="see-kopy"
-        aria-label="Kopy interface preview"
-      >
-        <div className="preview-chrome">
-          <div className="window-dots" aria-hidden="true">
-            <i />
-            <i />
-            <i />
+        <figure className="hero-stage">
+          <div className="stage-heading">
+            <Icon name="shelf" size={20} />
+            <span>A little room for your next move.</span>
           </div>
-          <span>{home.previewTitle}</span>
-          <span>macOS</span>
-        </div>
-        <Image
-          src="/images/kopy-history-light.png"
-          alt="Kopy’s light clipboard shelf showing pinned text, a link, a colour and a two-item stack beside its welcome tour. All content is a fixture."
-          width={2560}
-          height={1600}
-          priority
-          sizes="(max-width: 1200px) 100vw, 1160px"
-        />
-        <p className="image-caption">{home.previewCaption}</p>
+          <div className="stage-desktop" aria-hidden="true">
+            <span className="stage-handle" />
+          </div>
+          <div className="shelf-screenshot">
+            <Image
+              src="/images/kopy-history-light.png"
+              alt="Actual Kopy shelf with a pinned snippet, a saved link, a colour and a file stack. Sample content."
+              width={2560}
+              height={1600}
+              loading="eager"
+              fetchPriority="high"
+              sizes="1100px"
+            />
+          </div>
+          <div className="stage-callout" aria-hidden="true">
+            <span className="callout-icon">
+              <Icon name="text" size={22} />
+            </span>
+            <span>
+              Useful now.<strong>Ready for later.</strong>
+            </span>
+          </div>
+          <figcaption>Actual app view, with sample content.</figcaption>
+        </figure>
       </section>
+
       <section className="features wrap section-space" id="features">
         <div className="section-intro">
-          <p className="section-number">{home.featuresLabel}</p>
-          <h2>
-            {home.featuresTitle[0]}
-            <br />
-            {home.featuresTitle[1]}
-          </h2>
+          <div>
+            <p className="section-label">{home.featuresLabel}</p>
+            <h2>
+              {home.featuresTitle[0]}
+              <br />
+              {home.featuresTitle[1]}
+            </h2>
+          </div>
           <p>{home.featuresIntroduction}</p>
         </div>
         <div className="feature-list">
@@ -115,18 +112,17 @@ export default function Home() {
               <div className="feature-icon">
                 <Icon name={feature.symbol} />
               </div>
-              <div>
-                <h3>{feature.title}</h3>
-                <p>{feature.text}</p>
-              </div>
+              <h3>{feature.title}</h3>
+              <p>{feature.text}</p>
             </article>
           ))}
         </div>
       </section>
-      <section className="workflow-section">
-        <div className="wrap workflow">
+
+      <section className="workflow-section wrap" id="see-kopy">
+        <div className="workflow">
           <div className="workflow-copy">
-            <p className="section-number">{home.workflowLabel}</p>
+            <p className="section-label">{home.workflowLabel}</p>
             <h2>
               {home.workflowTitle[0]}
               <br />
@@ -147,35 +143,100 @@ export default function Home() {
               Read the file shelf guide
             </Link>
           </div>
-          <div className="detail-preview">
+          <figure className="detail-preview">
             <Image
               src="/images/kopy-preview-dark.png"
               alt="Kopy’s dark preview and file stack interface, rendered with sample files."
               width={2560}
               height={1600}
-              sizes="(max-width: 800px) 100vw, 650px"
+              sizes="(max-width: 800px) 100vw, 750px"
             />
-            <span className="detail-caption">{home.detailCaption}</span>
-          </div>
+            <figcaption>{home.detailCaption}</figcaption>
+          </figure>
+        </div>
+        <details className="full-view">
+          <summary>See the full light interface</summary>
+          <Image
+            src="/images/kopy-history-light.png"
+            alt="The full light interface showing Kopy’s shelf and welcome tour with sample content."
+            width={2560}
+            height={1600}
+            sizes="(max-width: 1200px) 100vw, 1160px"
+          />
+        </details>
+      </section>
+
+      <section
+        className="comparison wrap section-space"
+        id="compare"
+        aria-labelledby="comparison-title"
+      >
+        <div className="comparison-intro">
+          <p className="section-label">Kopy and Spotlight Clipboard</p>
+          <h2 id="comparison-title">{comparison.title}</h2>
+          <p>{comparison.introduction}</p>
+        </div>
+        <table className="comparison-table">
+          <caption className="visually-hidden">
+            A workflow comparison of Spotlight Clipboard and Kopy
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">What you want to do</th>
+              <th scope="col">
+                <span className="comparison-product">
+                  <Icon name="search" size={18} />
+                  Spotlight Clipboard
+                </span>
+              </th>
+              <th scope="col">
+                <span className="comparison-product">
+                  <Image
+                    src="/images/kopy-icon.png"
+                    alt=""
+                    width={24}
+                    height={24}
+                  />
+                  Kopy
+                </span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {comparison.rows.map((row) => (
+              <tr key={row.task}>
+                <th scope="row">{row.task}</th>
+                <td>{row.spotlight}</td>
+                <td>{row.kopy}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div className="comparison-bottom">
+          <p className="comparison-conclusion">{comparison.conclusion}</p>
+          <p className="comparison-note">
+            {comparison.note}{" "}
+            <a href={comparison.source.href}>{comparison.source.label}</a>.
+          </p>
         </div>
       </section>
-      <section className="privacy-section wrap section-space">
+
+      <section className="privacy-section wrap">
         <div className="privacy-symbol">
-          <Icon name="lock" size={34} />
+          <Icon name="lock" size={30} />
         </div>
-        <h2>
-          {home.privacyTitle[0]}
-          <br />
-          {home.privacyTitle[1]}
-        </h2>
-        <p>{home.privacy}</p>
-        <Link className="text-link" href="/privacy">
-          Read the privacy policy
-        </Link>
-      </section>
-      <section className="faq wrap">
         <div>
-          <p className="section-number">{home.faqLabel}</p>
+          <h2>{home.privacyTitle.join(" ")}</h2>
+          <p>{home.privacy}</p>
+          <Link className="text-link" href="/privacy">
+            Read the privacy policy
+          </Link>
+        </div>
+      </section>
+
+      <section className="faq wrap section-space">
+        <div>
+          <p className="section-label">{home.faqLabel}</p>
           <h2>{home.faqTitle}</h2>
         </div>
         <div className="faq-items">
@@ -187,15 +248,20 @@ export default function Home() {
           ))}
         </div>
       </section>
+
       <section className="closing wrap">
-        <Image src="/images/kopy-icon.png" alt="" width={64} height={64} />
-        <div>
-          <h2>{home.closingTitle}</h2>
-          <p>{home.closing}</p>
+        <div className="closing-brand">
+          <Image src="/images/kopy-icon.png" alt="" width={64} height={64} />
+          <span>Kopy for Mac</span>
         </div>
+        <h2>{home.closingTitle}</h2>
+        <p>{home.closing}</p>
         <Link className="button button-primary" href="/buy">
-          Explore the {site.price} purchase
+          Explore Kopy <span>{site.price}</span>
         </Link>
+        <span className="closing-note">
+          Planned one-time purchase. Coming soon.
+        </span>
       </section>
     </main>
   );

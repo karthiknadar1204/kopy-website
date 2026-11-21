@@ -1,18 +1,35 @@
 import Image from "next/image";
 import Link from "next/link";
 import { site } from "@/lib/site";
+import { MobileNavigation } from "./mobile-navigation";
+
+const navigation = [
+  { label: "Features", href: "/#features" },
+  { label: "Compare", href: "/#compare" },
+  { label: "Guides", href: "/guides" },
+  { label: "Support", href: "/support" },
+];
 
 export function Header() {
   return (
     <header className="site-header wrap">
-      <Link href="/" className="wordmark" aria-label="Kopy home">
+      <Link href="/#main" className="wordmark" aria-label="Kopy home">
         <Image src="/images/kopy-icon.png" alt="" width={35} height={35} />
         Kopy
       </Link>
       <nav aria-label="Main navigation">
-        <Link href="/#features">Features</Link>
-        <Link href="/guides">Guides</Link>
-        <Link href="/support">Support</Link>
+        {navigation.map((link) => (
+          <Link
+            className={
+              link.href === "/#compare" ? "nav-compare" : "nav-secondary"
+            }
+            key={link.href}
+            href={link.href}
+          >
+            {link.label}
+          </Link>
+        ))}
+        <MobileNavigation links={navigation} />
         <Link className="nav-buy" href="/buy">
           Get Kopy
         </Link>
@@ -25,7 +42,7 @@ export function Footer() {
   return (
     <footer className="site-footer wrap">
       <div>
-        <Link className="wordmark footer-mark" href="/">
+        <Link className="wordmark footer-mark" href="/#main">
           <Image src="/images/kopy-icon.png" alt="" width={28} height={28} />
           Kopy
         </Link>

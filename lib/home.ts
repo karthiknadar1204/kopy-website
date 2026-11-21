@@ -1,16 +1,12 @@
 export const home = {
-  availability: "A native Mac app. Coming soon.",
-  title: ["Everything between apps.", "Right at your edge."],
+  availability: "Made for Mac. Coming soon.",
+  title: ["Keep it close.", "Keep going."],
   description:
-    "The text you copied. The screenshot you need. The files going somewhere else. Give them a little shelf of their own.",
+    "The file for your next window. The words you use every day. Kopy keeps your useful things on a little shelf at the edge of your Mac.",
   note: "Planned one-time purchase. No account. No subscription.",
-  aside: ["Copy something.", "Keep it close.", "Carry on."],
   shortcutCaption: "Your shelf, one shortcut away.",
-  previewTitle: "A closer look at Kopy",
-  previewCaption:
-    "Actual Kopy views, rendered with sample content. Your clipboard stays yours.",
-  featuresLabel: "A place to put it",
-  featuresTitle: ["Less hunting.", "More getting on with it."],
+  featuresLabel: "The little things, handled",
+  featuresTitle: ["A place for everything", "between apps."],
   featuresIntroduction:
     "Kopy sits at the edge of your screen, ready for the small handoffs that fill your day.",
   workflowLabel: "A simple handoff",
@@ -68,14 +64,14 @@ export const home = {
 
 export const features = [
   {
-    title: "Find the thing you copied.",
-    text: "Search saved text, links, images and file references. Filter by kind or time, and keep useful items pinned.",
-    symbol: "search",
-  },
-  {
     title: "Set files down for a moment.",
     text: "Drop files onto the edge shelf, group them into a stack, then drag them into the next app.",
     symbol: "shelf",
+  },
+  {
+    title: "Find the thing you copied.",
+    text: "Search saved text, links, images and file references. Filter by kind or time, and keep useful items pinned.",
+    symbol: "search",
   },
   {
     title: "Keep the words you reuse.",
@@ -88,3 +84,48 @@ export const features = [
     symbol: "undo",
   },
 ];
+
+export const comparison = {
+  title: "Your Mac remembers. Kopy keeps things ready.",
+  introduction:
+    "Spotlight already has clipboard history on macOS Tahoe 26 and later. Kopy adds a place to collect files, organise useful copies and prepare your next handoff.",
+  rows: [
+    {
+      task: "Find a recent copy",
+      spotlight: "Search recent copies",
+      kopy: "Search, plus kind and time filters",
+    },
+    {
+      task: "Move files between apps",
+      spotlight: "Copy and paste",
+      kopy: "Edge shelf, file stacks and drag-out",
+    },
+    {
+      task: "Reuse your words",
+      spotlight: "Copy a previous item",
+      kopy: "Write, pin and edit text snippets",
+    },
+    {
+      task: "Keep things organised",
+      spotlight: "Search the history",
+      kopy: "Pins, item notes and grouped files",
+    },
+    {
+      task: "Recover a manual clear",
+      spotlight: "No restore action documented",
+      kopy: "Undo the last 20 delete or clear actions, even after restart",
+    },
+    {
+      task: "Price and macOS",
+      spotlight: "Included with macOS 26 and later",
+      kopy: "macOS 14 and later. Planned $2.99, once.",
+    },
+  ],
+  note: "Comparing Spotlight’s Clipboard view with Kopy’s current build, checked November 21, 2026. Apple’s column follows its published Clipboard guide; undocumented controls are not claims about every macOS app. Kopy’s recovery is bounded, and file references still depend on their originals.",
+  conclusion:
+    "Just need recent copies? Spotlight may be all you need. Want a shelf for files and the content you reuse? That’s where Kopy fits.",
+  source: {
+    label: "Apple’s Clipboard guide",
+    href: "https://support.apple.com/guide/mac-help/mchl40d5b86b/mac",
+  },
+};

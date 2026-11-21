@@ -1,4 +1,4 @@
-import { home, features } from "./home";
+import { home, features, comparison } from "./home";
 export { features } from "./home";
 
 export type ContentBlock =
@@ -43,6 +43,23 @@ export const documents: PublicDocument[] = [
       {
         kind: "steps",
         items: home.workflowSteps.map((step) => `${step.title} ${step.text}`),
+      },
+      { kind: "heading", text: comparison.title },
+      { kind: "paragraph", text: comparison.introduction },
+      ...comparison.rows.map((row): ContentBlock => ({
+        kind: "paragraph",
+        text: `${row.task}. Spotlight Clipboard: ${row.spotlight}. Kopy: ${row.kopy}.`,
+      })),
+      { kind: "paragraph", text: comparison.conclusion },
+      { kind: "paragraph", text: comparison.note },
+      {
+        kind: "links",
+        links: [
+          {
+            ...comparison.source,
+            description: "Apple’s documented search, copy and clear workflow.",
+          },
+        ],
       },
       { kind: "heading", text: home.privacyTitle.join(" ") },
       { kind: "paragraph", text: home.privacy },

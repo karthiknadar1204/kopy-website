@@ -26,6 +26,23 @@ The second command checks 24 routes, noindex on preview HTML, content types, can
 
 CI checks every main push and pull request. The public-site check runs daily at 03:17 UTC / 08:47 Asia/Kolkata, with manual dispatch as well. A hosted smoke run passed on November 21: https://github.com/karthiknadar1204/kopy-website/actions/runs/44870589904 . The schedule itself has not yet reached its first daily run. In GitHub notification settings, enable Actions failure notifications for this repository if email alerts are wanted; delivery is not proven just because a workflow exists. No Codex recurring automation was created.
 
+## What can happen before the domain is chosen?
+
+| Work | Before the domain | After the final domain is connected |
+| --- | --- | --- |
+| Buyer questions, competitor research and page briefs | Research now. Keyword discovery does not require ownership of a domain. | Use actual search data to refine the topics. |
+| Useful pages, both ScrollLaunch assessments and technical preparation | Already prepared; the homepage now also has a sourced Spotlight comparison shared with Markdown. | Verify final URLs, indexing directives, sitemap and internal links again. |
+| Uptime and build checks | Already configured against the preview; failure-email delivery still depends on GitHub notification settings. | Change the monitored origin and confirm a hosted run against it. |
+| GumCLI installation and reporting authorization | Already installed. The existing Search Console profile needs its missing scope repaired; that can happen before buying a domain. | Read the exact verified property. GumCLI authorization does not itself verify the website. |
+| Search Console ownership and notices | A preview URL-prefix property could be verified if desired, but the intentionally noindex preview is not expected to collect useful organic traffic. | Prefer the final Domain property with DNS verification; review Search Console email settings. |
+| Sitemap and indexing review | Validate the generated files and noindex behaviour now. | Submit the final sitemap, inspect priority URLs and request indexing when appropriate. |
+| Queries, positions, clicks and page improvements | Use qualitative research while there is no relevant Google performance data. | Save a real baseline and compare finalised periods as data becomes available. |
+| Keyword Planner | Separate, optional Google Ads API/developer-token setup; no advertising spend is authorised. Search Console read-only access does not include it. | The same separate access is needed; buying a domain does not unlock it. |
+| Google customer sign-in approval | Not applicable to Kopy's account-free licence flow. | Still not applicable unless a future product feature actually introduces Google sign-in. |
+| App Store search preparation | Draft listing copy, keywords and screenshots now. | Upload and validate after Apple account setup; GumCLI website reports do not measure App Store search. |
+
+This website design pass does not change Google authorization, notifications or property ownership. Keep preview indexing disabled until the launch decision. A purchased domain is not required for all SEO work, and domain verification alone does not create rankings or traffic.
+
 ## Turn the preview into an indexed launch later
 
 1. Choose the final domain and connect it in Vercel. Confirm HTTPS and the preferred host. Set `SITE_URL` to that exact origin in the site's environments. Replace the preview links in native `KopyLinks`, Store listing URLs, Dodo checkout return URLs and these operational notes.
