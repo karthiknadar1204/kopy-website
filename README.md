@@ -29,14 +29,20 @@ Never place a private API key in `NEXT_PUBLIC_*`, browser code, the repository, 
 - `lib/content.ts`: the typed public content registry. Article HTML and Markdown use this same source. `lib/home.ts` supplies homepage copy to both renderings.
 - `lib/site.ts`: origin validation, prelaunch settings and test-checkout allowlist.
 - `public/images/`: the existing Kopy app icon and screenshots rendered from fixture content. No real clipboard history is included.
-- `lib/demo.ts`: browser demo state, fixture content and guided tour.
+- `lib/demo.ts`: the file-handoff story, guided tour and drop geometry.
+- `lib/shelf-demo.ts`: typed sample history, search/filtering, edits, pinning and recoverable deletion.
+- `components/native-shelf.tsx`: the browser rendering of Kopy’s shelf, matched to the native app.
 - `tests/`: demo handoff/reset tests, checkout/origin boundaries and content/link consistency.
 
 Public documents: home, privacy, support, terms, changelog, guides hub and two practical guides. `.md` routes are explicit rewrites to a public-only Markdown handler. HTML stays the default. Markdown has canonical HTML links and `noindex`; it is excluded from the sitemap. The registry produces `llms.txt` and `llms-full.txt`. There is no private-page export, client analytics, Google login or customer database. `/purchase-complete` is a noindex, generic checkout-return page: URL parameters never establish payment or licensing state.
 
 ## Design
 
-The homepage puts an interactive, browser-local Kopy demonstration beside its main promise, followed by feature summaries, a dark file-stack showcase, a sourced Spotlight comparison and readable privacy/purchase information. Porcelain #fbfcfe, graphite #24282f, slate #626b79, coral #a84632, lilac #e9eaf5 and pale blue #edf2f7 preserve the app's identity. System typography and tactile keycaps suit the native Mac utility. Real app screenshots stay below the demo, including the complete light interface in an expandable view. The hero offers a finite file drag-and-drop walkthrough with pause/replay, and a hands-on mode with text copy/paste, file drag/drop and tap/keyboard alternatives. It never reads the system clipboard or real files, sends messages, or persists demo data. The tour shows picking up a file, hovering over the closed edge, dropping onto the shelf, retracting it, switching windows, reopening it and dragging the file into a draft. Hands-on shelves also slide closed on pointer exit, outside click or Escape without losing their sample contents. Reduced motion uses an explicit Next step control.
+The homepage uses a centred product promise over a wide MacBook desktop. Kopy’s shelf follows the native SwiftUI layout, dimensions and theme tokens: its full header, search, kind filters, pinned/recent groups, file stacks, previews and menus are represented with sample history. Visitors can search, filter, pin, preview, edit snippets, delete and undo, or drag sample files between Finder, Kopy and Mail. The shelf opens on the edge and retracts on pointer exit. A finite guided tour supports pause, resume, manual steps, replay and reduced motion.
+
+The browser preview never reads the system clipboard or local files, sends a message, uploads an attachment, or persists sample data. Open full demo provides a larger modal desktop, including a readable native-style shelf on phones. Real screenshots of the Mac app remain below the interactive scene. No third-party demo service or UI runtime was added.
+
+The reference composition comes from Cove’s full desktop and product panels, plus Aceternity’s MacBook and container presentations. Product styling comes from Kopy’s own ShelfTheme, ShelfView and ClipCard source, rather than a generic card kit. Porcelain #fbfcfe, graphite #24282f and coral #a84632 remain the website’s palette; the desktop has original vector wallpaper and sample artwork.
 
 Mobile navigation uses the browser's automatic popover for Escape/outside-click dismissal and closes on selection. Comparison copy has one source in lib/home.ts and appears in both HTML and Markdown. It compares Spotlight's documented Clipboard workflow, includes Apple's source, and does not invent retention limits, reviews or performance claims.
 

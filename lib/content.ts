@@ -38,7 +38,7 @@ export const documents: PublicDocument[] = [
       {
         kind: "paragraph",
         text:
-          "Watch a guided handoff or try copying sample text and moving a sample file between two windows. " +
+          "Explore Kopy’s shelf inside an interactive Mac desktop: search, filter, pin, preview, write snippets, or watch files move between Finder and Mail. " +
           demoDisclosure,
       },
       { kind: "heading", text: home.featuresTitle.join(" ") },

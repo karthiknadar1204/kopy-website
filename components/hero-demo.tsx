@@ -11,7 +11,18 @@ import {
   type PointerEvent,
   type RefObject,
 } from "react";
-import { Icon } from "./icon";
+import Image from "next/image";
+import { NativeShelf, ClipArtwork } from "./native-shelf";
+import { DemoSymbol } from "./demo-symbol";
+import {
+  initialShelfDemo,
+  initialShelfClips,
+  shelfDemoReducer,
+  samplePdf,
+  sampleImage,
+  sampleStack,
+  type ShelfClip,
+} from "@/lib/shelf-demo";
 import {
   demoDisclosure,
   demoFileDrop,
@@ -78,7 +89,8 @@ function GuidedPointer({
       if (!target || !desktop || !cursor) return;
       const bounds = desktop.getBoundingClientRect();
       const destination = target.getBoundingClientRect();
-      cursor.style.transform = `translate(${destination.left - bounds.left + destination.width / 2}px, ${destination.top - bounds.top + destination.height / 2}px)`;
+      const scale = bounds.width / desktop.offsetWidth;
+      cursor.style.transform = `translate(${(destination.left - bounds.left + destination.width / 2) / scale}px, ${(destination.top - bounds.top + destination.height / 2) / scale}px)`;
       cursor.dataset.positioned = "true";
     }
     position();
@@ -114,26 +126,38 @@ function GuidedPointer({
 }
 
 export function HeroDemo() {
-  const [state, dispatch] = useReducer(demoReducer, initialDemo);
+  const [state, dispatch] = useReducer(demoReducer, initialDemo, (initial) =>
+    demoReducer(demoReducer(initial, { kind: "try" }), { kind: "open-shelf" }),
+  );
+  const [shelfState, shelfDispatch] = useReducer(
+    shelfDemoReducer,
+    initialShelfDemo,
+  );
+  const [clipboard, setClipboard] = useState<ShelfClip | null>(null);
+  const [draft, setDraft] = useState<{ text: string; attachments: string[] }>({
+    text: "",
+    attachments: [],
+  });
+  const [notice, setNotice] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState(false);
   const [drag, setDrag] = useState<{
     origin: DragOrigin;
     point: DemoPoint;
+    clip: ShelfClip;
   } | null>(null);
-  const dragOrigin = drag?.origin ?? null;
   const dragSession = useRef<{
     origin: DragOrigin;
+    clip: ShelfClip;
     start: DemoPoint;
     active: boolean;
     source: HTMLElement;
     pointerId: number;
   } | null>(null);
   const stage = useRef<HTMLDivElement>(null);
+  const viewport = useRef<HTMLDivElement>(null);
   const shelf = useRef<HTMLDivElement>(null);
+  const dialog = useRef<HTMLDialogElement>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const cancelClose = useCallback(() => {
-    if (closeTimer.current !== null) clearTimeout(closeTimer.current);
-    closeTimer.current = null;
-  }, []);
   const reducedMotion = useSyncExternalStore(
     subscribeMotion,
     reducedMotionSnapshot,
@@ -144,52 +168,98 @@ export function HeroDemo() {
   const step = state.kind === "watch" ? tour[state.step] : null;
   const playing = state.kind === "watch" && state.playback === "playing";
   const complete = state.kind === "watch" && state.playback === "complete";
-  const carrying = interactive ? dragOrigin : step?.carrying;
+  const carrying = interactive ? drag?.origin : step?.carrying;
+  const attachmentNames = interactive
+    ? draft.attachments
+    : workspace.attached
+      ? [sampleFile]
+      : [];
+  const cancelClose = useCallback(() => {
+    if (closeTimer.current !== null) clearTimeout(closeTimer.current);
+    closeTimer.current = null;
+  }, []);
 
-  useEffect(() => cancelClose, [cancelClose, interactive]);
+  useEffect(() => cancelClose, [cancelClose, interactive, expanded]);
   useEffect(() => {
-    if (dragOrigin) cancelClose();
-  }, [dragOrigin, cancelClose]);
+    if (!playing || reducedMotion || !step) return;
+    const timer = setTimeout(
+      () => dispatch({ kind: "advance" }),
+      step.duration,
+    );
+    return () => clearTimeout(timer);
+  }, [playing, reducedMotion, step]);
+  useEffect(() => {
+    function pauseHidden() {
+      if (document.hidden) dispatch({ kind: "pause" });
+    }
+    document.addEventListener("visibilitychange", pauseHidden);
+    return () => document.removeEventListener("visibilitychange", pauseHidden);
+  }, []);
+  useLayoutEffect(() => {
+    const element = viewport.current;
+    if (!element) return;
+    function resize() {
+      if (!element) return;
+      element.style.setProperty(
+        "--desktop-scale",
+        String(expanded ? 1 : element.clientWidth / 1280),
+      );
+      element.style.setProperty(
+        "--shelf-height",
+        `${Math.min(650, (expanded ? element.clientHeight : 800) - 100)}px`,
+      );
+    }
+    resize();
+    const observer = new ResizeObserver(resize);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [expanded]);
+  useEffect(() => {
+    if (expanded) dialog.current?.showModal();
+  }, [expanded]);
 
   function scheduleClose(afterDrag = false) {
     cancelClose();
     if (!interactive || (dragSession.current && !afterDrag)) return;
+    const focused = document.activeElement;
+    if (
+      (focused instanceof HTMLInputElement ||
+        focused instanceof HTMLTextAreaElement) &&
+      shelf.current?.contains(focused)
+    )
+      return;
     closeTimer.current = setTimeout(
       () => dispatch({ kind: "close-shelf" }),
       350,
     );
   }
-
-  useEffect(() => {
-    if (!playing || reducedMotion || !step) return;
-    const timer = window.setTimeout(
-      () => dispatch({ kind: "advance" }),
-      step.duration,
-    );
-    return () => window.clearTimeout(timer);
-  }, [playing, reducedMotion, step]);
-
-  useEffect(() => {
-    function pauseWhenHidden() {
-      if (document.hidden) dispatch({ kind: "pause" });
-    }
-    document.addEventListener("visibilitychange", pauseWhenHidden);
-    return () =>
-      document.removeEventListener("visibilitychange", pauseWhenHidden);
-  }, []);
-
-  function startDrag(event: PointerEvent<HTMLElement>, origin: DragOrigin) {
+  function releaseDrag() {
+    const session = dragSession.current;
+    dragSession.current = null;
+    setDrag(null);
+    if (session?.source.hasPointerCapture(session.pointerId))
+      session.source.releasePointerCapture(session.pointerId);
+    return session;
+  }
+  function startDrag(
+    event: PointerEvent<HTMLElement>,
+    origin: DragOrigin,
+    clip: ShelfClip = samplePdf,
+  ) {
     if (
       event.button !== 0 ||
-      (event.target instanceof Element && event.target.closest("button"))
+      (event.target instanceof Element &&
+        event.target.closest("button:not([data-drag-handle])"))
     )
       return;
     cancelClose();
+    setNotice(null);
     event.preventDefault();
     event.currentTarget.focus({ preventScroll: true });
     event.currentTarget.setPointerCapture(event.pointerId);
     dragSession.current = {
       origin,
+      clip,
       start: { x: event.clientX, y: event.clientY },
       active: false,
       source: event.currentTarget,
@@ -199,7 +269,7 @@ export function HeroDemo() {
   function moveDrag(event: PointerEvent<HTMLElement>) {
     const session = dragSession.current;
     const desktop = stage.current;
-    if (!session || !desktop) return;
+    if (!session || !desktop || session.pointerId !== event.pointerId) return;
     if (
       !session.active &&
       Math.hypot(
@@ -208,12 +278,22 @@ export function HeroDemo() {
       ) < 5
     )
       return;
+    if (!session.active) {
+      session.source.setPointerCapture(session.pointerId);
+      session.source.focus({ preventScroll: true });
+    }
     session.active = true;
+    event.preventDefault();
     cancelClose();
     const bounds = desktop.getBoundingClientRect();
+    const scale = bounds.width / desktop.offsetWidth;
     setDrag({
       origin: session.origin,
-      point: { x: event.clientX - bounds.left, y: event.clientY - bounds.top },
+      clip: session.clip,
+      point: {
+        x: (event.clientX - bounds.left) / scale,
+        y: (event.clientY - bounds.top) / scale,
+      },
     });
     const edge = desktop
       .querySelector("[data-edge-zone]")
@@ -227,17 +307,24 @@ export function HeroDemo() {
     )
       dispatch({ kind: "open-shelf" });
   }
-  function releaseDrag() {
-    const session = dragSession.current;
-    dragSession.current = null;
-    setDrag(null);
-    if (session?.source.hasPointerCapture(session.pointerId))
-      session.source.releasePointerCapture(session.pointerId);
-    return session;
+  function appendAttachment(clip: ShelfClip) {
+    const names = clip.kind === "file" ? clip.members : [clip.title];
+    setDraft((current) => ({
+      ...current,
+      attachments: [...new Set([...current.attachments, ...names])],
+    }));
   }
   function finishDrag(event: PointerEvent<HTMLElement>) {
     const session = releaseDrag();
-    if (!session?.active) return;
+    if (!session) return;
+    if (!session.active) {
+      if (session.origin === "shelf")
+        shelfDispatch({
+          kind: "view",
+          value: { kind: "preview", id: session.clip.id },
+        });
+      return;
+    }
     const desktop = stage.current;
     const edge = desktop
       ?.querySelector("[data-edge-zone]")
@@ -255,447 +342,564 @@ export function HeroDemo() {
           ?.querySelector('[data-window="message"]')
           ?.getBoundingClientRect() ?? null,
     });
-    dispatch(action);
+    if (action.kind === "save-file") {
+      if (session.clip.id === samplePdf.id) dispatch(action);
+      shelfDispatch({ kind: "import-clip", clip: session.clip });
+      shelfDispatch({ kind: "view", value: { kind: "history" } });
+      shelfDispatch({ kind: "search", value: "" });
+      shelfDispatch({ kind: "filter", value: "all" });
+      setNotice(
+        `${session.clip.title} is on your shelf. Move away to close it, then switch to Mail.`,
+      );
+    } else if (action.kind === "attach-file") {
+      appendAttachment(session.clip);
+      dispatch(action);
+      dispatch({ kind: "close-shelf" });
+      setNotice(
+        `${session.clip.title} arrived in the draft. Your shelf is out of the way.`,
+      );
+    } else {
+      dispatch(action);
+      setNotice(
+        session.origin === "shelf"
+          ? "Drag cancelled. Your item is still on the shelf."
+          : "Drag cancelled. Nothing was added.",
+      );
+    }
     if (action.kind !== "save-file") scheduleClose(true);
   }
   function cancelDrag() {
     const session = releaseDrag();
     if (!session?.active) return;
     dispatch({ kind: "cancel-drag" });
+    setNotice("Drag cancelled. Your saved items stay on the shelf.");
     scheduleClose(true);
+  }
+  function copyClip(clip: ShelfClip) {
+    setClipboard(clip);
+    dispatch({ kind: "copy-text" });
+    dispatch({ kind: "select-text" });
+    setNotice(
+      `${clip.kind === "text" ? "Text" : clip.title} copied in this demo. Switch to Mail and choose Paste.`,
+    );
+  }
+  function pasteSample() {
+    if (!clipboard) return;
+    if (clipboard.kind === "file" || clipboard.kind === "image")
+      appendAttachment(clipboard);
+    else
+      setDraft((current) => ({
+        ...current,
+        text: [current.text, clipboard.value].filter(Boolean).join("\n"),
+      }));
+    dispatch({ kind: "paste" });
+    setNotice("Pasted into the sample draft. Nothing is sent or uploaded.");
   }
   function reset() {
     cancelClose();
     releaseDrag();
-    dispatch({ kind: "reset" });
-  }
-
-  function framePhoneDemo() {
-    if (window.matchMedia("(max-width: 650px)").matches)
-      stage.current?.scrollIntoView({
-        block: "start",
-        behavior: reducedMotion ? "instant" : "smooth",
-      });
+    setClipboard(null);
+    setDraft({ text: "", attachments: [] });
+    setNotice(null);
+    shelfDispatch({ kind: "reset" });
+    dispatch({ kind: "try" });
+    dispatch({ kind: "open-shelf" });
   }
   function watchDemo() {
     cancelClose();
     releaseDrag();
+    setNotice(null);
+    setDraft({ text: "", attachments: [] });
+    shelfDispatch({ kind: "reset" });
     dispatch({ kind: "watch", manual: reducedMotion });
-    framePhoneDemo();
+    if (window.matchMedia("(max-width: 650px)").matches) setExpanded(true);
+    else
+      viewport.current?.scrollIntoView({
+        block: "center",
+        behavior: reducedMotion ? "instant" : "smooth",
+      });
   }
+  function tryDemo() {
+    reset();
+    if (window.matchMedia("(max-width: 650px)").matches) setExpanded(true);
+  }
+  function switchWindow(window: "notes" | "message") {
+    dispatch({ kind: "switch-window", window });
+    setNotice(null);
+  }
+  const dragHandlers = (clip: ShelfClip) => ({
+    onPointerDown: (event: PointerEvent<HTMLDivElement>) =>
+      startDrag(event, "shelf", clip),
+    onPointerMove: moveDrag,
+    onPointerUp: finishDrag,
+    onPointerCancel: cancelDrag,
+  });
+
+  const desktop = (
+    <>
+      <div className={styles.macbook}>
+        <div className={styles.bezel}>
+          <div ref={viewport} className={styles.viewport}>
+            <div
+              ref={stage}
+              className={styles.desktop}
+              data-carried={carrying ?? "none"}
+            >
+              <div className={styles.menuBar} aria-hidden="true">
+                <span className={styles.apple}></span>
+                <strong>
+                  {workspace.window === "notes" ? "Finder" : "Mail"}
+                </strong>
+                <span>File</span>
+                <span>Edit</span>
+                <span>View</span>
+                <span>Window</span>
+                <span>Help</span>
+                <div className={styles.notch} />
+                <span className={styles.menuRight}>⌁ ▰ &nbsp; Sat 9:41</span>
+              </div>
+              <div
+                className={styles.workspace}
+                inert={!interactive}
+                onPointerDownCapture={(event) => {
+                  if (
+                    workspace.shelfOpen &&
+                    event.target instanceof Element &&
+                    !event.target.closest("[data-shelf-region]")
+                  ) {
+                    cancelClose();
+                    dispatch({ kind: "close-shelf" });
+                  }
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") {
+                    cancelDrag();
+                    dispatch({ kind: "close-shelf" });
+                  }
+                }}
+              >
+                {workspace.window === "notes" ? (
+                  <div className={styles.finder} data-window="notes">
+                    <div className={styles.windowChrome}>
+                      <span className={styles.lights} aria-hidden="true">
+                        <i />
+                        <i />
+                        <i />
+                      </span>
+                      <DemoSymbol name="back" size={17} />
+                      <strong>Studio</strong>
+                      <span className={styles.windowSearch}>
+                        <DemoSymbol name="search" size={18} />
+                      </span>
+                    </div>
+                    <aside className={styles.finderSidebar}>
+                      <span>Favourites</span>
+                      <p>◷ &nbsp; Recents</p>
+                      <p>⌂ &nbsp; Applications</p>
+                      <p className={styles.sidebarActive}>▣ &nbsp; Desktop</p>
+                      <p>▤ &nbsp; Documents</p>
+                      <p>↓ &nbsp; Downloads</p>
+                      <span>Locations</span>
+                      <p>▰ &nbsp; Macintosh HD</p>
+                    </aside>
+                    <div className={styles.finderMain}>
+                      <div className={styles.finderPath}>
+                        Desktop <span>›</span> Studio
+                      </div>
+                      <div className={styles.finderFiles}>
+                        <div
+                          className={styles.sourceFile}
+                          tabIndex={-1}
+                          onPointerDown={(event) => startDrag(event, "source")}
+                          onPointerMove={moveDrag}
+                          onPointerUp={finishDrag}
+                          onPointerCancel={cancelDrag}
+                        >
+                          <FileArtwork target="source-file" />
+                          <strong>{sampleFile}</strong>
+                          <span>PDF document · 248 KB</span>
+                        </div>
+                        <div
+                          className={styles.finderTile}
+                          tabIndex={-1}
+                          onPointerDown={(event) => startDrag(event, "source", sampleImage)}
+                          onPointerMove={moveDrag}
+                          onPointerUp={finishDrag}
+                          onPointerCancel={cancelDrag}
+                        >
+                          <Image
+                            draggable={false}
+                            src="/images/studio-moodboard.svg"
+                            alt=""
+                            width={110}
+                            height={76}
+                          />
+                          <strong>Moodboard.png</strong>
+                          <span>PNG image · 1.2 MB</span>
+                        </div>
+                        <div
+                          className={styles.finderTile}
+                          tabIndex={-1}
+                          onPointerDown={(event) => startDrag(event, "source", sampleStack)}
+                          onPointerMove={moveDrag}
+                          onPointerUp={finishDrag}
+                          onPointerCancel={cancelDrag}
+                        >
+                          <span className={styles.folderIcon}>
+                            <DemoSymbol name="folder" size={56} />
+                          </span>
+                          <strong>Brand notes</strong>
+                          <span>2 items</span>
+                        </div>
+                      </div>
+                      <div className={styles.finderBottom}>
+                        3 items{" "}
+                        <span>Drag Studio notes.pdf to Kopy’s left edge</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className={styles.mail} data-window="message">
+                    <div className={styles.windowChrome}>
+                      <span className={styles.lights} aria-hidden="true">
+                        <i />
+                        <i />
+                        <i />
+                      </span>
+                      <strong>New Message</strong>
+                      <span className={styles.windowSearch}>
+                        <DemoSymbol name="mail" size={19} />
+                      </span>
+                    </div>
+                    <aside className={styles.mailSidebar}>
+                      <strong>Mailboxes</strong>
+                      <p>
+                        All Inboxes <span>3</span>
+                      </p>
+                      <p className={styles.sidebarActive}>
+                        Drafts <span>1</span>
+                      </p>
+                      <p>Sent</p>
+                      <p>Archive</p>
+                      <p>Trash</p>
+                      <div>
+                        <DemoSymbol name="mail" size={22} />
+                        <span>Studio</span>
+                      </div>
+                    </aside>
+                    <div className={styles.compose}>
+                      <div className={styles.recipient}>
+                        <span>To:</span>
+                        <strong>The studio</strong>
+                        <small>Sample draft</small>
+                      </div>
+                      <div className={styles.subject}>
+                        <span>Subject:</span>
+                        <strong>A few things for the project</strong>
+                      </div>
+                      <div className={styles.draft}>
+                        <p>Hey team,</p>
+                        {draft.text ? (
+                          <p
+                            data-testid="pasted-sample"
+                            className={styles.pasted}
+                          >
+                            {draft.text}
+                          </p>
+                        ) : (
+                          <p className={styles.placeholder}>
+                            Here’s what I’ve been working on.
+                          </p>
+                        )}
+                        <div
+                          data-demo-target="draft"
+                          className={styles.dropAnchor}
+                        />
+                        {attachmentNames.map((name) => (
+                          <div
+                            key={name}
+                            className={styles.attachment}
+                            data-testid="attached-sample"
+                          >
+                            <DemoSymbol
+                              name={name.endsWith("png") ? "image" : "file"}
+                              size={29}
+                            />
+                            <span>
+                              <strong>{name}</strong>
+                              <small>Sample attachment</small>
+                            </span>
+                            <span>✓</span>
+                          </div>
+                        ))}
+                        {carrying === "shelf" && (
+                          <div className={styles.dropHint}>
+                            Drop into this draft
+                          </div>
+                        )}
+                        <p className={styles.signature}>
+                          Thanks,
+                          <br />
+                          The studio
+                        </p>
+                      </div>
+                      <div className={styles.composeActions}>
+                        <button
+                          type="button"
+                          disabled={!clipboard}
+                          onClick={pasteSample}
+                        >
+                          <DemoSymbol name="copy" size={16} />
+                          Paste
+                        </button>
+                        <span>Demo only. Nothing is sent.</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div
+                  className={styles.shelfRegion}
+                  data-shelf-region
+                  onPointerEnter={cancelClose}
+                  onPointerLeave={() => scheduleClose()}
+                >
+                  <div className={styles.edgeZone} data-edge-zone>
+                    <button
+                      type="button"
+                      className={styles.edgeHandle}
+                      data-demo-target="edge"
+                      aria-label="Open Kopy shelf"
+                      aria-expanded={workspace.shelfOpen}
+                      aria-controls="sample-shelf"
+                      onPointerEnter={(event) => {
+                        cancelClose();
+                        if (event.pointerType === "mouse")
+                          dispatch({ kind: "open-shelf" });
+                      }}
+                      onClick={() => dispatch({ kind: "open-shelf" })}
+                    >
+                      <span />
+                    </button>
+                  </div>
+                  <NativeShelf
+                    state={shelfState}
+                    dispatch={shelfDispatch}
+                    panelRef={shelf}
+                    open={workspace.shelfOpen}
+                    fileSaved={!interactive && workspace.fileSaved}
+                    dragging={carrying === "source"}
+                    copy={copyClip}
+                    importText={() => {
+                      copyClip(initialShelfClips[0]);
+                      dispatch({ kind: "open-shelf" });
+                    }}
+                    dragHandlers={dragHandlers}
+                  />
+                </div>
+                <span
+                  className={styles.outsideAnchor}
+                  data-demo-target="outside"
+                />
+                <div className={styles.dock}>
+                  <button
+                    type="button"
+                    aria-label="Show Finder"
+                    aria-pressed={workspace.window === "notes"}
+                    onClick={() => switchWindow("notes")}
+                  >
+                    <span className={styles.finderDock}>
+                      <DemoSymbol name="finder" size={33} />
+                    </span>
+                    <small>Finder</small>
+                  </button>
+                  <button
+                    type="button"
+                    data-demo-target="message"
+                    aria-label="Show Mail"
+                    aria-pressed={workspace.window === "message"}
+                    onClick={() => switchWindow("message")}
+                  >
+                    <span className={styles.mailDock}>
+                      <DemoSymbol name="mail" size={33} />
+                    </span>
+                    <small>Mail</small>
+                  </button>
+                  <span className={styles.dockDivider} />
+                  <button
+                    type="button"
+                    aria-label="Toggle Kopy shelf"
+                    aria-pressed={workspace.shelfOpen}
+                    onClick={() =>
+                      dispatch({
+                        kind: workspace.shelfOpen
+                          ? "close-shelf"
+                          : "open-shelf",
+                      })
+                    }
+                  >
+                    <Image
+                      src="/images/kopy-icon.png"
+                      alt=""
+                      width={48}
+                      height={48}
+                    />
+                    <small>Kopy</small>
+                  </button>
+                </div>
+              </div>
+              {drag && (
+                <div
+                  className={styles.liveDrag}
+                  style={{
+                    transform: `translate(${drag.point.x}px,${drag.point.y}px)`,
+                  }}
+                  aria-hidden="true"
+                >
+                  <div className={styles.carriedFile}>
+                    <ClipArtwork clip={drag.clip} />
+                    <span>{drag.clip.title}</span>
+                    <b>+</b>
+                  </div>
+                </div>
+              )}
+              {state.kind === "watch" &&
+                state.playback !== "ready" &&
+                !reducedMotion &&
+                step && <GuidedPointer stage={stage} step={step} />}
+            </div>
+          </div>
+        </div>
+        <div className={styles.laptopBase} aria-hidden="true">
+          <span />
+        </div>
+      </div>
+      <div className={styles.controls}>
+        <div className={styles.modes} aria-label="Demo mode">
+          <button type="button" aria-pressed={!interactive} onClick={watchDemo}>
+            <DemoSymbol name="play" size={15} />
+            Watch demo
+          </button>
+          <button type="button" aria-pressed={interactive} onClick={tryDemo}>
+            Try it yourself
+          </button>
+        </div>
+        <div className={styles.utilityControls}>
+          {playing && !reducedMotion && (
+            <button type="button" onClick={() => dispatch({ kind: "pause" })}>
+              Pause
+            </button>
+          )}
+          {state.kind === "watch" &&
+            state.playback === "paused" &&
+            !reducedMotion && (
+              <button
+                type="button"
+                onClick={() => dispatch({ kind: "resume" })}
+              >
+                Resume
+              </button>
+            )}
+          {state.kind === "watch" &&
+            (reducedMotion || state.playback === "paused") &&
+            state.playback !== "complete" && (
+              <button
+                type="button"
+                onClick={() => dispatch({ kind: "advance" })}
+              >
+                Next step
+              </button>
+            )}
+          {complete && (
+            <button type="button" onClick={watchDemo}>
+              Replay
+            </button>
+          )}
+          {interactive && (
+            <>
+              <button
+                type="button"
+                onClick={() => dispatch({ kind: "close-shelf" })}
+              >
+                Close shelf
+              </button>
+              <button type="button" onClick={reset}>
+                Reset
+              </button>
+            </>
+          )}
+          {!expanded && (
+            <button
+              type="button"
+              className={styles.expandButton}
+              onClick={() => {
+                cancelClose();
+                releaseDrag();
+                dispatch({ kind: "open-shelf" });
+                setExpanded(true);
+              }}
+            >
+              <DemoSymbol name="expand" size={16} />
+              Open full demo
+            </button>
+          )}
+        </div>
+      </div>
+      <p className={styles.instruction} role="status">
+        {interactive
+          ? (notice ??
+            "This is Kopy’s shelf. Search, filter, preview or pin an item. Drag the PDF from Finder to the edge, then into Mail.")
+          : complete
+            ? "Collected. Kept. Dropped into your next window. Now try the shelf yourself."
+            : step?.caption}
+      </p>
+      <p className={styles.disclosure}>
+        {demoDisclosure} <a href="#see-kopy">See original app screenshots</a>
+      </p>
+    </>
+  );
 
   return (
     <section
       className={styles.demo}
-      aria-label="Interactive Kopy demo"
       id="interactive-demo"
+      aria-label="Interactive Kopy desktop demo"
     >
-      <div className={styles.heading}>
-        <span>
-          <Icon name="shelf" size={19} /> A little room for your next move.
-        </span>
-        <span className={styles.sampleLabel}>Interactive demo</span>
-      </div>
-      <div className={styles.modes} aria-label="Demo mode">
-        <button type="button" aria-pressed={!interactive} onClick={watchDemo}>
-          <svg
-            width="13"
-            height="14"
-            viewBox="0 0 13 14"
-            fill="currentColor"
-            aria-hidden="true"
-          >
-            <path d="M2 1.5 11.5 7 2 12.5Z" />
-          </svg>
-          Watch demo
-        </button>
-        <button
-          type="button"
-          aria-pressed={interactive}
-          onClick={() => {
-            cancelClose();
-            releaseDrag();
-            dispatch({ kind: "try" });
-            framePhoneDemo();
-          }}
-        >
-          Try it yourself
-        </button>
-      </div>
-
-      <div
-        ref={stage}
-        className={styles.desktop}
-        data-dragging={Boolean(carrying)}
-        data-carried={carrying ?? "none"}
-      >
-        <div className={styles.menuBar} aria-hidden="true">
-          <span>●</span>
-          <strong>{workspace.window === "notes" ? "Notes" : "Message"}</strong>
-          <span>Sample desktop</span>
-        </div>
-        <div
-          className={styles.workspace}
-          inert={!interactive}
-          onPointerDownCapture={(event) => {
-            if (
-              workspace.shelfOpen &&
-              event.target instanceof Element &&
-              !event.target.closest("[data-shelf-region]")
-            ) {
+      {expanded ? (
+        <>
+          <div className={styles.desktopPlaceholder} />
+          <dialog
+            ref={dialog}
+            className={styles.dialog}
+            onClose={() => {
               cancelClose();
-              dispatch({ kind: "close-shelf" });
-            }
-          }}
-          onKeyDown={(event) => {
-            if (event.key === "Escape") {
-              cancelDrag();
-              dispatch({ kind: "close-shelf" });
-            }
-          }}
-        >
-          <div
-            className={styles.windowTabs}
-            role="group"
-            aria-label="Sample windows"
+              setExpanded(false);
+            }}
           >
-            <button
-              type="button"
-              aria-pressed={workspace.window === "notes"}
-              onClick={() =>
-                dispatch({ kind: "switch-window", window: "notes" })
-              }
-            >
-              Notes
-            </button>
-            <button
-              type="button"
-              data-demo-target="message"
-              aria-pressed={workspace.window === "message"}
-              onClick={() =>
-                dispatch({ kind: "switch-window", window: "message" })
-              }
-            >
-              Message
-            </button>
-          </div>
-          <div className={styles.appWindow} data-window={workspace.window}>
-            <div className={styles.windowChrome}>
-              <span className={styles.lights} aria-hidden="true">
-                <i />
-                <i />
-                <i />
-              </span>
+            <div className={styles.dialogHeader}>
               <span>
-                {workspace.window === "notes"
-                  ? "A few useful things"
-                  : "A new draft"}
+                <Image
+                  src="/images/kopy-icon.png"
+                  alt=""
+                  width={24}
+                  height={24}
+                />
+                Kopy · Interactive desktop
               </span>
-            </div>
-            {workspace.window === "notes" ? (
-              <div className={styles.notes}>
-                <span className={styles.documentLabel}>
-                  Ready for your next window
-                </span>
-                <div
-                  className={styles.sourceFile}
-                  tabIndex={interactive ? 0 : -1}
-                  aria-label="Drag Studio notes.pdf to the shelf"
-                  onPointerDown={(event) => startDrag(event, "source")}
-                  onPointerMove={moveDrag}
-                  onPointerUp={finishDrag}
-                  onPointerCancel={cancelDrag}
-                >
-                  <FileArtwork target="source-file" />
-                  <div>
-                    <strong>{sampleFile}</strong>
-                    <span>Drag this file to the left edge.</span>
-                    <button
-                      type="button"
-                      onClick={() => dispatch({ kind: "save-file" })}
-                    >
-                      Add file to shelf
-                    </button>
-                  </div>
-                </div>
-                <div className={styles.sampleNote}>
-                  <p className={styles.noteText}>{sampleText}</p>
-                  <button
-                    type="button"
-                    className={styles.copyButton}
-                    onClick={() => dispatch({ kind: "copy-text" })}
-                  >
-                    <Icon name="shelf" size={16} />
-                    {workspace.textSaved ? "Copy again" : "Copy text"}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className={styles.message}>
-                <div className={styles.recipient}>
-                  <span>To</span>
-                  <strong>The studio</strong>
-                  <span>Draft only</span>
-                </div>
-                <div className={styles.draft}>
-                  <span
-                    className={styles.dropAnchor}
-                    data-demo-target="draft"
-                  />
-                  {workspace.pasted ? (
-                    <p className={styles.pasted} data-testid="pasted-sample">
-                      {sampleText}
-                    </p>
-                  ) : (
-                    <p className={styles.placeholder}>
-                      Something worth sharing…
-                    </p>
-                  )}
-                  {workspace.attached && (
-                    <div
-                      className={styles.attachment}
-                      data-testid="attached-sample"
-                    >
-                      <FileArtwork />
-                      <span>
-                        <strong>{sampleFile}</strong>
-                        <small>Sample attachment</small>
-                      </span>
-                      <span aria-hidden="true">✓</span>
-                    </div>
-                  )}
-                  {carrying === "shelf" && (
-                    <span className={styles.dropHint}>
-                      Drop the sample file here
-                    </span>
-                  )}
-                </div>
-                <div className={styles.draftActions}>
-                  <button
-                    type="button"
-                    className={styles.copyButton}
-                    disabled={!workspace.clipboardText || workspace.pasted}
-                    onClick={() => dispatch({ kind: "paste" })}
-                  >
-                    {workspace.pasted ? "Text pasted ✓" : "Paste sample"}
-                  </button>
-                  <span>Nothing is sent.</span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <span className={styles.outsideAnchor} data-demo-target="outside" />
-          <div
-            className={styles.shelfRegion}
-            data-shelf-region
-            onPointerEnter={cancelClose}
-            onPointerLeave={() => scheduleClose()}
-          >
-            <div className={styles.edgeZone} data-edge-zone>
               <button
                 type="button"
-                className={styles.edgeHandle}
-                data-demo-target="edge"
-                aria-label="Open Kopy shelf"
-                aria-expanded={workspace.shelfOpen}
-                aria-controls="sample-shelf"
-                onPointerEnter={(event) => {
-                  cancelClose();
-                  if (event.pointerType === "mouse" && !workspace.shelfOpen)
-                    dispatch({ kind: "open-shelf" });
-                }}
-                onClick={() => dispatch({ kind: "open-shelf" })}
+                aria-label="Return to website"
+                onClick={() => dialog.current?.close()}
               >
-                <span />
+                <DemoSymbol name="close" size={18} />
+                Close
               </button>
             </div>
-
-            <div
-              ref={shelf}
-              id="sample-shelf"
-              className={styles.shelf}
-              aria-label="Sample Kopy shelf"
-              data-open={workspace.shelfOpen}
-              aria-hidden={!workspace.shelfOpen}
-              inert={!workspace.shelfOpen}
-            >
-              <div className={styles.shelfHeader}>
-                <span>
-                  <Icon name="shelf" size={19} /> Kopy
-                </span>
-                <button
-                  type="button"
-                  aria-label="Close shelf"
-                  onClick={() => dispatch({ kind: "close-shelf" })}
-                >
-                  ×
-                </button>
-              </div>
-              <div className={styles.shelfSearch}>
-                <Icon name="search" size={14} /> Your useful things
-              </div>
-              <div className={styles.shelfLabel}>
-                Recent{" "}
-                <span>
-                  {Number(workspace.textSaved) + Number(workspace.fileSaved)}
-                </span>
-              </div>
-              {workspace.textSaved && (
-                <button
-                  type="button"
-                  className={styles.snippet}
-                  onClick={() => dispatch({ kind: "select-text" })}
-                >
-                  <span className={styles.textIcon}>
-                    <Icon name="text" size={18} />
-                  </span>
-                  <span>
-                    <strong>{sampleText}</strong>
-                    <small>Click to copy</small>
-                  </span>
-                </button>
-              )}
-              {workspace.fileSaved && (
-                <div
-                  className={styles.shelfFile}
-                  tabIndex={interactive ? 0 : -1}
-                  aria-label="Drag Studio notes.pdf from the shelf"
-                  onPointerDown={(event) => startDrag(event, "shelf")}
-                  onPointerMove={moveDrag}
-                  onPointerUp={finishDrag}
-                  onPointerCancel={cancelDrag}
-                >
-                  <FileArtwork target="shelf-file" />
-                  <div>
-                    <strong>{sampleFile}</strong>
-                    <small>Drag into Message</small>
-                    <button
-                      type="button"
-                      disabled={
-                        workspace.window !== "message" || workspace.attached
-                      }
-                      onClick={() => dispatch({ kind: "attach-file" })}
-                    >
-                      {workspace.attached ? "Attached ✓" : "Attach file"}
-                    </button>
-                  </div>
-                </div>
-              )}
-              {!workspace.textSaved && !workspace.fileSaved && (
-                <p className={styles.emptyShelf}>
-                  A place for your next handoff.
-                  <span>Copy the note, or drop the sample file here.</span>
-                </p>
-              )}
-              <p className={styles.shelfFoot}>Text copies. Files drag.</p>
-              <span
-                className={styles.shelfDropAnchor}
-                data-demo-target="shelf-drop"
-              />
-            </div>
-          </div>
-          {!workspace.shelfOpen && workspace.fileSaved && (
-            <span className={styles.closedNotice}>
-              Shelf closed. Your file is kept.
-            </span>
-          )}
-        </div>
-        {drag && (
-          <div
-            className={styles.liveDrag}
-            style={{
-              transform: `translate(${drag.point.x}px, ${drag.point.y}px)`,
-            }}
-            data-origin={drag.origin}
-            aria-hidden="true"
-          >
-            <div className={styles.carriedFile}>
-              <FileArtwork />
-              <span>{sampleFile}</span>
-              <b>+</b>
-            </div>
-          </div>
-        )}
-        {state.kind === "watch" &&
-          state.playback !== "ready" &&
-          !reducedMotion &&
-          step && <GuidedPointer stage={stage} step={step} />}
-      </div>
-
-      <div className={styles.guide}>
-        <div className={styles.guideHeading}>
-          <span>
-            {interactive
-              ? "Your turn"
-              : complete
-                ? "That’s Kopy."
-                : "A small handoff"}
-          </span>
-          <div className={styles.playback}>
-            {state.kind === "watch" &&
-              state.playback !== "ready" &&
-              !complete && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    dispatch({
-                      kind: reducedMotion
-                        ? "advance"
-                        : playing
-                          ? "pause"
-                          : "resume",
-                    })
-                  }
-                >
-                  {reducedMotion ? "Next step" : playing ? "Pause" : "Resume"}
-                </button>
-              )}
-            {complete && (
-              <button type="button" onClick={watchDemo}>
-                Replay
-              </button>
-            )}
-            {interactive && (
-              <button type="button" onClick={reset}>
-                Reset
-              </button>
-            )}
-          </div>
-        </div>
-        <p className={styles.instruction} role="status">
-          {interactive
-            ? workspace.hint
-            : complete
-              ? "Your turn: collect, close, switch windows, reopen and drop."
-              : step?.caption}
-        </p>
-        <div className={styles.progress} aria-hidden="true">
-          {["Collect", "Close", "Switch", "Drop"].map((label, index) => (
-            <span
-              key={label}
-              data-done={
-                index === 0
-                  ? workspace.textSaved || workspace.fileSaved
-                  : index === 1
-                    ? workspace.shelfRetracted
-                    : index === 2
-                      ? workspace.destinationVisited
-                      : workspace.pasted || workspace.attached
-              }
-            >
-              {label}
-            </span>
-          ))}
-        </div>
-      </div>
-      <p className={styles.disclosure}>{demoDisclosure}</p>
-      <noscript>
-        <p className={styles.disclosure}>
-          Enable JavaScript to play. The real app screenshots and guides are
-          below.
-        </p>
-      </noscript>
+            <div className={styles.expandedContent}>{desktop}</div>
+          </dialog>
+        </>
+      ) : (
+        desktop
+      )}
     </section>
   );
 }
