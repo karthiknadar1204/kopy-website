@@ -1,4 +1,5 @@
 import { home, features, comparison } from "./home";
+import { demoDisclosure } from "./demo";
 export { features } from "./home";
 
 export type ContentBlock =
@@ -33,6 +34,13 @@ export const documents: PublicDocument[] = [
       { kind: "paragraph", text: home.availability },
       { kind: "paragraph", text: home.description },
       { kind: "paragraph", text: home.note },
+      { kind: "heading", text: "Try the interactive demo" },
+      {
+        kind: "paragraph",
+        text:
+          "Watch a guided handoff or try copying sample text and moving a sample file between two windows. " +
+          demoDisclosure,
+      },
       { kind: "heading", text: home.featuresTitle.join(" ") },
       { kind: "paragraph", text: home.featuresIntroduction },
       ...features.flatMap((feature): ContentBlock[] => [

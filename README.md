@@ -29,13 +29,14 @@ Never place a private API key in `NEXT_PUBLIC_*`, browser code, the repository, 
 - `lib/content.ts`: the typed public content registry. Article HTML and Markdown use this same source. `lib/home.ts` supplies homepage copy to both renderings.
 - `lib/site.ts`: origin validation, prelaunch settings and test-checkout allowlist.
 - `public/images/`: the existing Kopy app icon and screenshots rendered from fixture content. No real clipboard history is included.
-- `tests/`: checkout/origin boundary tests and content/link consistency.
+- `lib/demo.ts`: browser demo state, fixture content and guided tour.
+- `tests/`: demo handoff/reset tests, checkout/origin boundaries and content/link consistency.
 
 Public documents: home, privacy, support, terms, changelog, guides hub and two practical guides. `.md` routes are explicit rewrites to a public-only Markdown handler. HTML stays the default. Markdown has canonical HTML links and `noindex`; it is excluded from the sitemap. The registry produces `llms.txt` and `llms-full.txt`. There is no private-page export, client analytics, Google login or customer database. `/purchase-complete` is a noindex, generic checkout-return page: URL parameters never establish payment or licensing state.
 
 ## Design
 
-The homepage puts a crop of Kopy's actual shelf beside its main promise, followed by feature summaries, a dark file-stack showcase, a sourced Spotlight comparison and readable privacy/purchase information. Porcelain #fbfcfe, graphite #24282f, slate #626b79, coral #a84632, lilac #e9eaf5 and pale blue #edf2f7 preserve the app's identity. System typography and tactile keycaps suit the native Mac utility. The complete fixture screenshot remains available through an expandable view.
+The homepage puts an interactive, browser-local Kopy demonstration beside its main promise, followed by feature summaries, a dark file-stack showcase, a sourced Spotlight comparison and readable privacy/purchase information. Porcelain #fbfcfe, graphite #24282f, slate #626b79, coral #a84632, lilac #e9eaf5 and pale blue #edf2f7 preserve the app's identity. System typography and tactile keycaps suit the native Mac utility. Real app screenshots stay below the demo, including the complete light interface in an expandable view. The hero offers a finite guided walkthrough with pause/replay, and a hands-on mode with text copy/paste, file drag/drop and tap/keyboard alternatives. It never reads the system clipboard or real files, sends messages, or persists demo data. Reduced motion uses an explicit Next step control.
 
 Mobile navigation uses the browser's automatic popover for Escape/outside-click dismissal and closes on selection. Comparison copy has one source in lib/home.ts and appears in both HTML and Markdown. It compares Spotlight's documented Clipboard workflow, includes Apple's source, and does not invent retention limits, reviews or performance claims.
 

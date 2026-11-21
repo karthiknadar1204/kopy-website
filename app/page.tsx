@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Icon } from "@/components/icon";
+import { HeroDemo } from "@/components/hero-demo";
 import { documentAt, features } from "@/lib/content";
 import { home, comparison } from "@/lib/home";
 import { absolute, site } from "@/lib/site";
@@ -47,7 +48,7 @@ export default function Home() {
               Explore Kopy <span>{site.price}</span>
             </Link>
             <a className="button button-secondary" href="#see-kopy">
-              See how it works
+              See the real app
             </a>
           </div>
           <p className="hero-note">{home.note}</p>
@@ -63,35 +64,7 @@ export default function Home() {
             <span>{home.shortcutCaption}</span>
           </div>
         </div>
-        <figure className="hero-stage">
-          <div className="stage-heading">
-            <Icon name="shelf" size={20} />
-            <span>A little room for your next move.</span>
-          </div>
-          <div className="stage-desktop" aria-hidden="true">
-            <span className="stage-handle" />
-          </div>
-          <div className="shelf-screenshot">
-            <Image
-              src="/images/kopy-history-light.png"
-              alt="Actual Kopy shelf with a pinned snippet, a saved link, a colour and a file stack. Sample content."
-              width={2560}
-              height={1600}
-              loading="eager"
-              fetchPriority="high"
-              sizes="1100px"
-            />
-          </div>
-          <div className="stage-callout" aria-hidden="true">
-            <span className="callout-icon">
-              <Icon name="text" size={22} />
-            </span>
-            <span>
-              Useful now.<strong>Ready for later.</strong>
-            </span>
-          </div>
-          <figcaption>Actual app view, with sample content.</figcaption>
-        </figure>
+        <HeroDemo />
       </section>
 
       <section className="features wrap section-space" id="features">

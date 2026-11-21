@@ -314,104 +314,6 @@ kbd {
   background: white;
   box-shadow: 0 2px 3px #28334d05;
 }
-.hero-stage {
-  position: relative;
-  min-width: 0;
-  height: 570px;
-  overflow: hidden;
-  isolation: isolate;
-  border-radius: 27px;
-  background: var(--lilac);
-  border: 1px solid #dee0ed;
-}
-.stage-heading {
-  position: absolute;
-  top: 24px;
-  left: 27px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #555b73;
-  font-size: 13px;
-}
-.stage-desktop {
-  position: absolute;
-  top: 76px;
-  bottom: 51px;
-  left: 26px;
-  right: -23px;
-  border: 1px solid #cfd3e5;
-  border-radius: 17px;
-  background: #f2f3fa;
-}
-.stage-handle {
-  position: absolute;
-  left: 0;
-  top: 43%;
-  width: 4px;
-  height: 72px;
-  background: #a0a5bd;
-  border-radius: 0 4px 4px 0;
-}
-.shelf-screenshot {
-  position: absolute;
-  width: 292px;
-  aspect-ratio: 723 / 1160;
-  top: 72px;
-  right: 48px;
-  overflow: hidden;
-  border-radius: 16px;
-  background: #f7f5f2;
-  border: 1px solid #d5d0cb;
-  box-shadow:
-    0 24px 40px #353c6424,
-    0 4px 9px #353c6410;
-}
-.shelf-screenshot img {
-  position: absolute;
-  width: 354.08%;
-  max-width: none;
-  left: -47.3%;
-  top: -17.67%;
-}
-.stage-callout {
-  position: absolute;
-  top: 278px;
-  left: 20px;
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  background: white;
-  border: 1px solid #e1e2ec;
-  border-radius: 13px;
-  padding: 13px 17px;
-  box-shadow: 0 8px 20px #444c6d16;
-  color: var(--muted);
-  font-size: 12px;
-}
-.callout-icon {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 39px;
-  background: var(--coral-light);
-  border: 1px solid #efd9d1;
-  border-radius: 9px;
-  color: var(--coral);
-}
-.stage-callout strong {
-  display: block;
-  color: var(--ink);
-  font-weight: 600;
-  font-size: 14px;
-}
-.hero-stage figcaption {
-  position: absolute;
-  bottom: 17px;
-  left: 27px;
-  color: #626881;
-  font-size: 12px;
-}
 .section-space {
   padding-block: 85px;
 }
@@ -1052,22 +954,6 @@ kbd {
   .hero-description {
     font-size: 17px;
   }
-  .hero-stage {
-    height: 535px;
-  }
-  .shelf-screenshot {
-    width: 270px;
-    right: 23px;
-  }
-  .stage-heading {
-    font-size: 12px;
-    left: 20px;
-  }
-  .stage-callout {
-    left: 12px;
-    top: 300px;
-    padding: 10px;
-  }
   .feature-list {
     gap: 25px;
   }
@@ -1117,17 +1003,6 @@ kbd {
   .hero h1 {
     font-size: 52px;
     letter-spacing: -2.8px;
-  }
-  .hero-stage {
-    height: 490px;
-  }
-  .shelf-screenshot {
-    width: 245px;
-    top: 67px;
-    right: 17px;
-  }
-  .stage-callout {
-    display: none;
   }
   .hero-actions {
     gap: 8px;
@@ -1253,32 +1128,6 @@ kbd {
   }
   .hero-shortcut > span {
     max-width: none;
-  }
-  .hero-stage {
-    height: 510px;
-    border-radius: 20px;
-  }
-  .stage-heading {
-    top: 20px;
-    left: 20px;
-    font-size: 12px;
-    gap: 8px;
-  }
-  .shelf-screenshot {
-    width: 264px;
-    top: 62px;
-    right: max(20px, calc(50% - 132px));
-    border-radius: 14px;
-  }
-  .stage-desktop {
-    top: 62px;
-    bottom: 46px;
-    left: 16px;
-  }
-  .hero-stage figcaption {
-    left: 20px;
-    bottom: 13px;
-    font-size: 11px;
   }
   .section-space {
     padding-block: 55px;

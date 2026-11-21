@@ -36,7 +36,7 @@ B. Copy alongside an edge-shelf demonstration.
     Spotlight comparison
     privacy, questions and purchase information
 
-Choose B. A repeats the previous page's headline-then-screenshot arrangement. B puts Kopy's recognisable shelf in the first screen and makes its edge interaction the memorable visual. Keep the underlying interface factual; the main shelf is a CSS crop of the existing fixture screenshot, with the full view available farther down the page. Stage annotations describe features rather than pretend to be interactive app controls.
+Choose B. A repeats the previous page's headline-then-screenshot arrangement. B puts Kopy's recognisable shelf in the first screen and makes its edge interaction the memorable visual. The first refresh used a crop of a fixture screenshot; the interactive hero update below replaces that crop while retaining real screenshots farther down the page.
 
 Palette: porcelain #fbfcfe, graphite #24282f, slate #626b79, coral #a84632, lilac #e9eaf5 and pale blue #edf2f7. Keep coral from the app icon rather than adopting a reference site's accent. Type: the system sans family, with deliberate display sizing and relaxed body text suitable for a native Mac product. Left-aligned copy, varied section sizes, quiet borders, one substantial product stage. Avoid repeated decorative badges, invented metrics, stock illustrations and automatic animations. Keep reduced-motion behaviour and visible keyboard focus.
 
@@ -57,3 +57,17 @@ Verified native-popover Escape and outside-click dismissal, closing on a navigat
 Polish fixes include mobile access to all navigation links, explicit home-to-main anchors, persistent navigation while reading, larger tap targets and using the ordered list's own numbers so assistive technology does not announce duplicate step numbers. The full image remains available rather than making the cropped hero the only product evidence.
 
 Screenshots and live deployment checks are delivered with the task. Search indexing and live purchasing remain unchanged from the prelaunch setup.
+
+## Interactive hero
+
+The follow-up brief calls for a working browser demonstration with Watch demo and Try it yourself, while preserving the actual app screenshots below it. Reviewed the public interactive-demo material at [Navattic](https://www.navattic.com/) and [Arcade](https://www.arcade.software/lp/product-demo-video), plus [Dropover's shelf presentation](https://dropoverapp.com/). Borrow the pattern of a short, self-directed product journey; do not embed their services or reuse their assets.
+
+Keep the existing palette, system type and split hero. The memorable element is now a miniature desktop: Notes, Message and Kopy's edge shelf. Avoid an autoplay video, a second large screenshot in the same hero, and a separate tour modal that would hide the page's context. Watch runs once after a visitor starts it, points at the relevant controls, and supports pause, resume and replay. Reduced-motion preferences remove moving effects and replace automatic steps with Next step. The tour pauses when the browser tab is hidden.
+
+Hands-on mode uses a local reducer shared with the guided tour's actions. Visitors copy a sample note, open the shelf, switch windows, choose the snippet and paste. They can also drag the sample PDF onto the edge, switch windows and drag it into the draft. Explicit Add file to shelf and Attach file controls provide touch and keyboard alternatives. Escape closes the shelf. Reset clears the demo, and switching away from Watch cancels its pending timer. Text uses copy/paste; file cards use drag/drop, matching Kopy's native behaviour.
+
+The desktop, file artwork and windows are HTML/CSS fixtures, clearly labelled as a browser demo. It never calls the Clipboard API, reads local files, uploads attachments, sends messages, requests permissions, or stores visitor data. The dark native screenshot and expandable full light screenshot remain the product evidence below the simulation. The homepage Markdown also describes the demo and its sample-only boundary.
+
+Verification: all ten tests, ESLint, strict TypeScript and the production build pass. The five new state-flow tests cover the guided handoff, text reuse, file prerequisites, reset, stale tour actions after switching mode, and manual reduced-motion stepping. Production-browser QA covers watch/pause/resume/replay, switching to hands-on mode, text copy/paste, real browser file drags in both directions, button alternatives, Escape and keyboard activation. Layout checks cover 320px, 390px, 768px and the normal desktop viewport. Both real screenshots still load and expand. Browser error logs are empty. Reduced-motion state transitions are covered by tests; the Mac's accessibility preference was not changed for QA.
+
+Polish fixes from the browser pass: give the sample window enough height to avoid clipping its file controls, remove a duplicate play prompt, prevent accidental text selection when dragging file rows, and keep progress completed after the shelf closes. Screenshot artifacts are delivered with the task. The noindex preview and Dodo test-only purchase boundary remain in place.
