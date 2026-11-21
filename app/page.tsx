@@ -145,7 +145,7 @@ export default function Home() {
         aria-labelledby="comparison-title"
       >
         <div className="comparison-intro">
-          <p className="section-label">Kopy and Spotlight Clipboard</p>
+          <p className="section-label">{comparison.label}</p>
           <h2 id="comparison-title">{comparison.title}</h2>
           <p>{comparison.introduction}</p>
         </div>
