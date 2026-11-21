@@ -30,7 +30,6 @@ import {
   demoWorkspace,
   initialDemo,
   sampleFile,
-  sampleText,
   tour,
   type DemoTarget,
   type DemoPoint,
