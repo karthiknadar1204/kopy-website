@@ -113,7 +113,7 @@ export const documents: PublicDocument[] = [
       },
       {
         kind: "paragraph",
-        text: "Direct-download activation sends the entered licence key and an installation reference to Dodo Payments to activate, validate or deactivate your licence. Activation credentials are kept in Keychain. Dodo handles checkout information, payment records, receipts and licence delivery under its own policies. No card details or clipboard history are sent to this website’s backend. Current checkout testing uses Dodo’s test environment; live purchasing is not enabled.",
+        text: "Direct-download activation sends the entered licence key and the generic installation name ‘Kopy on Mac’ to Dodo Payments. Validation and deactivation send the key and activation-instance identifier. Dodo also receives normal connection information such as your IP address. Credentials and the validation date are kept in a separate Keychain item. No clipboard contents, notes, searches or file contents accompany licence requests. A validated licence can work for up to 30 days during a connection failure; an explicit invalid or revoked result locks access. Successful deactivation removes licence credentials without deleting history or its encryption key. Current checkout testing uses Dodo’s test environment; live purchasing is not enabled. The Mac App Store build contains no Dodo activation or validation.",
       },
       {
         kind: "paragraph",
@@ -141,6 +141,21 @@ export const documents: PublicDocument[] = [
       {
         kind: "paragraph",
         text: "We update this policy when data handling changes. Its updated date reflects a content revision, not each deployment. Purchase records may be retained by Dodo for its payment, accounting and legal obligations; contact support about purchase-data requests.",
+      },
+      {
+        kind: "links",
+        links: [
+          {
+            label: "Dodo Payments privacy policy",
+            href: "https://dodopayments.com/privacy-policy",
+            description: "Checkout, receipts and licence delivery.",
+          },
+          {
+            label: "Vercel privacy policy",
+            href: "https://vercel.com/legal/privacy-policy",
+            description: "Website hosting and request processing.",
+          },
+        ],
       },
     ],
   },
