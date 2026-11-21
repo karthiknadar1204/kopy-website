@@ -70,6 +70,7 @@
   background: #f1f3f9;
   isolation: isolate;
   overflow: hidden;
+  scroll-margin-top: 110px;
 }
 .menuBar {
   height: 30px;
@@ -194,13 +195,16 @@
   color: #717a89;
 }
 .sourceFile {
+  touch-action: none;
   user-select: none;
   display: flex;
   align-items: center;
   gap: 11px;
-  margin-top: 15px;
-  border-top: 1px solid #eceef3;
-  padding-top: 13px;
+  margin-top: 10px;
+  padding: 13px 11px;
+  border: 1px solid #d9dfe9;
+  border-radius: 9px;
+  background: #f8f9fc;
   cursor: grab;
 }
 .sourceFile > div,
@@ -393,7 +397,34 @@
   border-radius: 13px;
   padding: 8px 10px;
   box-shadow: 9px 12px 27px #20293c30;
-  animation: shelf-in 0.24s ease-out;
+  transform: translateX(calc(-100% - 20px));
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    transform 0.24s cubic-bezier(0.2, 0.7, 0.2, 1),
+    opacity 0.2s,
+    visibility 0s 0.24s;
+}
+.shelf[data-open="true"] {
+  transform: translateX(0);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition-delay: 0s;
+}
+.sampleNote {
+  margin-top: 17px;
+}
+.sampleNote .noteText {
+  font-size: 15px;
+  font-weight: 450;
+  letter-spacing: -0.2px;
+}
+.sourceFile > .fileArtwork {
+  width: 45px;
+  height: 57px;
+  padding: 7px;
 }
 .shelfHeader {
   display: flex;
@@ -480,6 +511,7 @@
   background: #41454f;
 }
 .shelfFile {
+  touch-action: none;
   user-select: none;
   display: flex;
   gap: 9px;
@@ -540,48 +572,114 @@
   position: absolute;
   z-index: 7;
   pointer-events: none;
-  top: 232px;
-  left: 122px;
-  transition:
-    top 0.6s ease-in-out,
-    left 0.6s ease-in-out;
+  top: 0;
+  left: 0;
+  visibility: hidden;
   filter: drop-shadow(0 2px 2px #2026332b);
 }
-.cursor > span {
+.cursor[data-positioned="true"] {
+  visibility: visible;
+  transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.liveDrag {
   position: absolute;
-  top: 26px;
-  left: 18px;
-  padding: 1px 8px;
-  border: 1px solid #fff4;
-  background: #343d55;
-  border-radius: 5px;
-  color: white;
-  font-size: 9px;
+  top: 0;
+  left: 0;
+  z-index: 8;
+  pointer-events: none;
 }
-.cursor[data-target="edge"] {
-  top: 215px;
-  left: 19px;
+.liveDrag[data-origin="shelf"] .carriedFile {
+  left: auto;
+  right: 4px;
 }
-.cursor[data-target="message"] {
-  top: 63px;
-  left: calc(50% + 38px);
+.carriedFile {
+  position: absolute;
+  top: 21px;
+  left: 17px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: max-content;
+  max-width: 175px;
+  padding: 6px 9px 6px 6px;
+  border: 1px solid #d7dce6;
+  border-radius: 8px;
+  background: #fffffff5;
+  box-shadow: 0 6px 17px #25324b24;
+  color: #343e52;
 }
-.cursor[data-target="snippet"] {
-  top: 230px;
-  left: 115px;
-}
-.cursor[data-target="paste"] {
-  top: calc(100% - 53px);
-  left: 117px;
-}
-.startHint button {
-  border: 0;
-  border-bottom: 1px solid #ab5a45;
-  padding: 2px 0;
-  color: #963e2b;
-  background: transparent;
+.carriedFile > span {
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 550;
+}
+.carriedFile .fileArtwork {
+  width: 27px;
+  height: 34px;
+  padding: 4px;
+}
+.carriedFile .fileArtwork > span:first-child {
+  font-size: 6px;
+}
+.carriedFile .fileArtwork > span:last-child {
+  display: none;
+}
+.carriedFile b {
+  position: absolute;
+  bottom: -5px;
+  left: -6px;
+  width: 15px;
+  height: 15px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #47795f;
+  color: white;
+  font-size: 12px;
+  line-height: 1;
+}
+.cursor[data-carrying="shelf"] .carriedFile {
+  left: auto;
+  right: 4px;
+}
+.desktop[data-carried="source"] .sourceFile > [data-file-artwork],
+.desktop[data-carried="shelf"] .shelfFile {
+  opacity: 0.38;
+}
+.shelfRegion {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.shelfRegion .edgeZone {
+  pointer-events: auto;
+}
+.outsideAnchor,
+.dropAnchor,
+.shelfDropAnchor {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  pointer-events: none;
+}
+.outsideAnchor {
+  right: 30px;
+  top: 80px;
+}
+.dropAnchor {
+  right: 12px;
+  top: 42%;
+}
+.shelfDropAnchor {
+  left: 55%;
+  top: 67%;
+}
+.closedNotice {
+  position: absolute;
+  left: 13px;
+  bottom: 2px;
+  color: #64718a;
+  font-size: 9px;
+  pointer-events: none;
 }
 .guide {
   padding: 15px 8px 0;
@@ -638,16 +736,6 @@
   color: #687188;
   font-size: 11px;
   line-height: 1.6;
-}
-@keyframes shelf-in {
-  from {
-    transform: translateX(-14px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
 }
 @media (max-width: 1150px) and (min-width: 801px) {
   .sampleLabel {
@@ -761,9 +849,6 @@
   .pasted {
     font-size: 14px;
   }
-  .startHint > span {
-    display: none;
-  }
   .instruction {
     min-height: 63px;
     font-size: 14px;
@@ -774,22 +859,6 @@
   }
   .guide {
     padding-top: 9px;
-  }
-  .cursor {
-    top: 236px;
-    left: 101px;
-  }
-  .cursor[data-target="message"] {
-    top: 65px;
-    left: calc(50% + 38px);
-  }
-  .cursor[data-target="snippet"] {
-    top: 232px;
-    left: 110px;
-  }
-  .cursor[data-target="paste"] {
-    top: calc(100% - 52px);
-    left: 107px;
   }
   .progress > span {
     font-size: 10px;

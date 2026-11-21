@@ -2,24 +2,32 @@
 
 import {
   useEffect,
+  useLayoutEffect,
+  useCallback,
   useReducer,
+  useRef,
   useState,
   useSyncExternalStore,
-  type DragEvent,
+  type PointerEvent,
+  type RefObject,
 } from "react";
 import { Icon } from "./icon";
 import {
   demoDisclosure,
+  demoFileDrop,
   demoReducer,
   demoWorkspace,
   initialDemo,
   sampleFile,
   sampleText,
   tour,
+  type DemoTarget,
+  type DemoPoint,
+  type DragOrigin,
+  type TourStep,
 } from "@/lib/demo";
 import styles from "./hero-demo.module.css";
 
-const fileType = "application/x-kopy-demo-file";
 const motionQuery = "(prefers-reduced-motion: reduce)";
 function subscribeMotion(onChange: () => void) {
   const query = window.matchMedia(motionQuery);
@@ -33,9 +41,14 @@ function serverMotionSnapshot() {
   return false;
 }
 
-function FileArtwork() {
+function FileArtwork({ target }: { target?: DemoTarget }) {
   return (
-    <span className={styles.fileArtwork} aria-hidden="true">
+    <span
+      className={styles.fileArtwork}
+      aria-hidden="true"
+      data-file-artwork
+      data-demo-target={target}
+    >
       <span>
         Studio
         <br />
@@ -46,9 +59,81 @@ function FileArtwork() {
   );
 }
 
+function GuidedPointer({
+  stage,
+  step,
+}: {
+  stage: RefObject<HTMLDivElement | null>;
+  step: TourStep;
+}) {
+  const pointer = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const desktop = stage.current;
+    const cursor = pointer.current;
+    if (!desktop || !cursor) return;
+    function position() {
+      const target = desktop?.querySelector(
+        `[data-demo-target="${step.target}"]`,
+      );
+      if (!target || !desktop || !cursor) return;
+      const bounds = desktop.getBoundingClientRect();
+      const destination = target.getBoundingClientRect();
+      cursor.style.transform = `translate(${destination.left - bounds.left + destination.width / 2}px, ${destination.top - bounds.top + destination.height / 2}px)`;
+      cursor.dataset.positioned = "true";
+    }
+    position();
+    const observer = new ResizeObserver(position);
+    observer.observe(desktop);
+    return () => observer.disconnect();
+  }, [stage, step.target]);
+  return (
+    <div
+      ref={pointer}
+      className={styles.cursor}
+      aria-hidden="true"
+      data-carrying={step.carrying ?? "none"}
+    >
+      <svg width="25" height="30" viewBox="0 0 25 30">
+        <path
+          d="m3 2 18 15-9 1-4 9Z"
+          fill="#24282f"
+          stroke="white"
+          strokeWidth="2"
+          strokeLinejoin="round"
+        />
+      </svg>
+      {step.carrying && (
+        <div className={styles.carriedFile}>
+          <FileArtwork />
+          <span>{sampleFile}</span>
+          <b>+</b>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function HeroDemo() {
   const [state, dispatch] = useReducer(demoReducer, initialDemo);
-  const [dragging, setDragging] = useState(false);
+  const [drag, setDrag] = useState<{
+    origin: DragOrigin;
+    point: DemoPoint;
+  } | null>(null);
+  const dragOrigin = drag?.origin ?? null;
+  const dragSession = useRef<{
+    origin: DragOrigin;
+    start: DemoPoint;
+    active: boolean;
+    source: HTMLElement;
+    pointerId: number;
+  } | null>(null);
+  const stage = useRef<HTMLDivElement>(null);
+  const shelf = useRef<HTMLDivElement>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cancelClose = useCallback(() => {
+    if (closeTimer.current !== null) clearTimeout(closeTimer.current);
+    closeTimer.current = null;
+  }, []);
   const reducedMotion = useSyncExternalStore(
     subscribeMotion,
     reducedMotionSnapshot,
@@ -59,6 +144,21 @@ export function HeroDemo() {
   const step = state.kind === "watch" ? tour[state.step] : null;
   const playing = state.kind === "watch" && state.playback === "playing";
   const complete = state.kind === "watch" && state.playback === "complete";
+  const carrying = interactive ? dragOrigin : step?.carrying;
+
+  useEffect(() => cancelClose, [cancelClose, interactive]);
+  useEffect(() => {
+    if (dragOrigin) cancelClose();
+  }, [dragOrigin, cancelClose]);
+
+  function scheduleClose(afterDrag = false) {
+    cancelClose();
+    if (!interactive || (dragSession.current && !afterDrag)) return;
+    closeTimer.current = setTimeout(
+      () => dispatch({ kind: "close-shelf" }),
+      350,
+    );
+  }
 
   useEffect(() => {
     if (!playing || reducedMotion || !step) return;
@@ -78,30 +178,110 @@ export function HeroDemo() {
       document.removeEventListener("visibilitychange", pauseWhenHidden);
   }, []);
 
-  function startDrag(event: DragEvent<HTMLElement>) {
-    event.dataTransfer.setData(fileType, "studio-notes");
-    event.dataTransfer.effectAllowed = "copy";
-    setDragging(true);
-  }
-  function allowSampleDrop(event: DragEvent<HTMLElement>) {
-    if (event.dataTransfer.types.includes(fileType)) {
-      event.preventDefault();
-      event.dataTransfer.dropEffect = "copy";
-    }
-  }
-  function dropSample(
-    event: DragEvent<HTMLElement>,
-    destination: "shelf" | "message",
-  ) {
-    if (event.dataTransfer.getData(fileType) !== "studio-notes") return;
+  function startDrag(event: PointerEvent<HTMLElement>, origin: DragOrigin) {
+    if (
+      event.button !== 0 ||
+      (event.target instanceof Element && event.target.closest("button"))
+    )
+      return;
+    cancelClose();
     event.preventDefault();
-    event.stopPropagation();
-    setDragging(false);
-    dispatch({ kind: destination === "shelf" ? "save-file" : "attach-file" });
+    event.currentTarget.focus({ preventScroll: true });
+    event.currentTarget.setPointerCapture(event.pointerId);
+    dragSession.current = {
+      origin,
+      start: { x: event.clientX, y: event.clientY },
+      active: false,
+      source: event.currentTarget,
+      pointerId: event.pointerId,
+    };
+  }
+  function moveDrag(event: PointerEvent<HTMLElement>) {
+    const session = dragSession.current;
+    const desktop = stage.current;
+    if (!session || !desktop) return;
+    if (
+      !session.active &&
+      Math.hypot(
+        event.clientX - session.start.x,
+        event.clientY - session.start.y,
+      ) < 5
+    )
+      return;
+    session.active = true;
+    cancelClose();
+    const bounds = desktop.getBoundingClientRect();
+    setDrag({
+      origin: session.origin,
+      point: { x: event.clientX - bounds.left, y: event.clientY - bounds.top },
+    });
+    const edge = desktop
+      .querySelector("[data-edge-zone]")
+      ?.getBoundingClientRect();
+    if (
+      edge &&
+      event.clientX >= edge.left &&
+      event.clientX <= edge.right &&
+      event.clientY >= edge.top &&
+      event.clientY <= edge.bottom
+    )
+      dispatch({ kind: "open-shelf" });
+  }
+  function releaseDrag() {
+    const session = dragSession.current;
+    dragSession.current = null;
+    setDrag(null);
+    if (session?.source.hasPointerCapture(session.pointerId))
+      session.source.releasePointerCapture(session.pointerId);
+    return session;
+  }
+  function finishDrag(event: PointerEvent<HTMLElement>) {
+    const session = releaseDrag();
+    if (!session?.active) return;
+    const desktop = stage.current;
+    const edge = desktop
+      ?.querySelector("[data-edge-zone]")
+      ?.getBoundingClientRect();
+    if (!edge) return;
+    const action = demoFileDrop({
+      origin: session.origin,
+      point: { x: event.clientX, y: event.clientY },
+      edge,
+      shelf: workspace.shelfOpen
+        ? (shelf.current?.getBoundingClientRect() ?? null)
+        : null,
+      destination:
+        desktop
+          ?.querySelector('[data-window="message"]')
+          ?.getBoundingClientRect() ?? null,
+    });
+    dispatch(action);
+    if (action.kind !== "save-file") scheduleClose(true);
+  }
+  function cancelDrag() {
+    const session = releaseDrag();
+    if (!session?.active) return;
+    dispatch({ kind: "cancel-drag" });
+    scheduleClose(true);
   }
   function reset() {
-    setDragging(false);
+    cancelClose();
+    releaseDrag();
     dispatch({ kind: "reset" });
+  }
+
+  function framePhoneDemo() {
+    if (window.matchMedia("(max-width: 650px)").matches)
+      stage.current?.scrollIntoView({
+        block: "start",
+        behavior: reducedMotion ? "instant" : "smooth",
+      });
+  }
+  function watchDemo() {
+    cancelClose();
+    releaseDrag();
+    dispatch({ kind: "watch", manual: reducedMotion });
+    framePhoneDemo();
   }
 
   return (
@@ -117,14 +297,7 @@ export function HeroDemo() {
         <span className={styles.sampleLabel}>Interactive demo</span>
       </div>
       <div className={styles.modes} aria-label="Demo mode">
-        <button
-          type="button"
-          aria-pressed={!interactive}
-          onClick={() => {
-            setDragging(false);
-            dispatch({ kind: "watch", manual: reducedMotion });
-          }}
-        >
+        <button type="button" aria-pressed={!interactive} onClick={watchDemo}>
           <svg
             width="13"
             height="14"
@@ -140,15 +313,22 @@ export function HeroDemo() {
           type="button"
           aria-pressed={interactive}
           onClick={() => {
-            setDragging(false);
+            cancelClose();
+            releaseDrag();
             dispatch({ kind: "try" });
+            framePhoneDemo();
           }}
         >
           Try it yourself
         </button>
       </div>
 
-      <div className={styles.desktop} data-dragging={dragging}>
+      <div
+        ref={stage}
+        className={styles.desktop}
+        data-dragging={Boolean(carrying)}
+        data-carried={carrying ?? "none"}
+      >
         <div className={styles.menuBar} aria-hidden="true">
           <span>●</span>
           <strong>{workspace.window === "notes" ? "Notes" : "Message"}</strong>
@@ -157,8 +337,21 @@ export function HeroDemo() {
         <div
           className={styles.workspace}
           inert={!interactive}
+          onPointerDownCapture={(event) => {
+            if (
+              workspace.shelfOpen &&
+              event.target instanceof Element &&
+              !event.target.closest("[data-shelf-region]")
+            ) {
+              cancelClose();
+              dispatch({ kind: "close-shelf" });
+            }
+          }}
           onKeyDown={(event) => {
-            if (event.key === "Escape") dispatch({ kind: "close-shelf" });
+            if (event.key === "Escape") {
+              cancelDrag();
+              dispatch({ kind: "close-shelf" });
+            }
           }}
         >
           <div
@@ -177,6 +370,7 @@ export function HeroDemo() {
             </button>
             <button
               type="button"
+              data-demo-target="message"
               aria-pressed={workspace.window === "message"}
               onClick={() =>
                 dispatch({ kind: "switch-window", window: "message" })
@@ -200,26 +394,22 @@ export function HeroDemo() {
             </div>
             {workspace.window === "notes" ? (
               <div className={styles.notes}>
-                <span className={styles.documentLabel}>Studio notebook</span>
-                <p className={styles.noteText}>{sampleText}</p>
-                <button
-                  type="button"
-                  className={styles.copyButton}
-                  onClick={() => dispatch({ kind: "copy-text" })}
-                >
-                  <Icon name="shelf" size={16} />
-                  {workspace.textSaved ? "Copy again" : "Copy text"}
-                </button>
+                <span className={styles.documentLabel}>
+                  Ready for your next window
+                </span>
                 <div
                   className={styles.sourceFile}
-                  draggable={interactive}
-                  onDragStart={startDrag}
-                  onDragEnd={() => setDragging(false)}
+                  tabIndex={interactive ? 0 : -1}
+                  aria-label="Drag Studio notes.pdf to the shelf"
+                  onPointerDown={(event) => startDrag(event, "source")}
+                  onPointerMove={moveDrag}
+                  onPointerUp={finishDrag}
+                  onPointerCancel={cancelDrag}
                 >
-                  <FileArtwork />
+                  <FileArtwork target="source-file" />
                   <div>
                     <strong>{sampleFile}</strong>
-                    <span>Drag to the left edge, or</span>
+                    <span>Drag this file to the left edge.</span>
                     <button
                       type="button"
                       onClick={() => dispatch({ kind: "save-file" })}
@@ -228,20 +418,30 @@ export function HeroDemo() {
                     </button>
                   </div>
                 </div>
+                <div className={styles.sampleNote}>
+                  <p className={styles.noteText}>{sampleText}</p>
+                  <button
+                    type="button"
+                    className={styles.copyButton}
+                    onClick={() => dispatch({ kind: "copy-text" })}
+                  >
+                    <Icon name="shelf" size={16} />
+                    {workspace.textSaved ? "Copy again" : "Copy text"}
+                  </button>
+                </div>
               </div>
             ) : (
-              <div
-                className={styles.message}
-                onDragOver={allowSampleDrop}
-                onDrop={(event) => dropSample(event, "message")}
-                data-drop-target={dragging}
-              >
+              <div className={styles.message}>
                 <div className={styles.recipient}>
                   <span>To</span>
                   <strong>The studio</strong>
                   <span>Draft only</span>
                 </div>
                 <div className={styles.draft}>
+                  <span
+                    className={styles.dropAnchor}
+                    data-demo-target="draft"
+                  />
                   {workspace.pasted ? (
                     <p className={styles.pasted} data-testid="pasted-sample">
                       {sampleText}
@@ -264,7 +464,7 @@ export function HeroDemo() {
                       <span aria-hidden="true">✓</span>
                     </div>
                   )}
-                  {dragging && (
+                  {carrying === "shelf" && (
                     <span className={styles.dropHint}>
                       Drop the sample file here
                     </span>
@@ -285,33 +485,40 @@ export function HeroDemo() {
             )}
           </div>
 
+          <span className={styles.outsideAnchor} data-demo-target="outside" />
           <div
-            className={styles.edgeZone}
-            onDragOver={allowSampleDrop}
-            onDrop={(event) => dropSample(event, "shelf")}
+            className={styles.shelfRegion}
+            data-shelf-region
+            onPointerEnter={cancelClose}
+            onPointerLeave={() => scheduleClose()}
           >
-            <button
-              type="button"
-              className={styles.edgeHandle}
-              aria-label="Open Kopy shelf"
-              aria-expanded={workspace.shelfOpen}
-              aria-controls="sample-shelf"
-              onMouseEnter={() => {
-                if (!workspace.shelfOpen) dispatch({ kind: "open-shelf" });
-              }}
-              onClick={() => dispatch({ kind: "open-shelf" })}
-            >
-              <span />
-            </button>
-          </div>
+            <div className={styles.edgeZone} data-edge-zone>
+              <button
+                type="button"
+                className={styles.edgeHandle}
+                data-demo-target="edge"
+                aria-label="Open Kopy shelf"
+                aria-expanded={workspace.shelfOpen}
+                aria-controls="sample-shelf"
+                onPointerEnter={(event) => {
+                  cancelClose();
+                  if (event.pointerType === "mouse" && !workspace.shelfOpen)
+                    dispatch({ kind: "open-shelf" });
+                }}
+                onClick={() => dispatch({ kind: "open-shelf" })}
+              >
+                <span />
+              </button>
+            </div>
 
-          {workspace.shelfOpen && (
             <div
+              ref={shelf}
               id="sample-shelf"
               className={styles.shelf}
               aria-label="Sample Kopy shelf"
-              onDragOver={allowSampleDrop}
-              onDrop={(event) => dropSample(event, "shelf")}
+              data-open={workspace.shelfOpen}
+              aria-hidden={!workspace.shelfOpen}
+              inert={!workspace.shelfOpen}
             >
               <div className={styles.shelfHeader}>
                 <span>
@@ -319,7 +526,7 @@ export function HeroDemo() {
                 </span>
                 <button
                   type="button"
-                  aria-label="Hide sample shelf"
+                  aria-label="Close shelf"
                   onClick={() => dispatch({ kind: "close-shelf" })}
                 >
                   ×
@@ -352,11 +559,14 @@ export function HeroDemo() {
               {workspace.fileSaved && (
                 <div
                   className={styles.shelfFile}
-                  draggable={interactive}
-                  onDragStart={startDrag}
-                  onDragEnd={() => setDragging(false)}
+                  tabIndex={interactive ? 0 : -1}
+                  aria-label="Drag Studio notes.pdf from the shelf"
+                  onPointerDown={(event) => startDrag(event, "shelf")}
+                  onPointerMove={moveDrag}
+                  onPointerUp={finishDrag}
+                  onPointerCancel={cancelDrag}
                 >
-                  <FileArtwork />
+                  <FileArtwork target="shelf-file" />
                   <div>
                     <strong>{sampleFile}</strong>
                     <small>Drag into Message</small>
@@ -379,29 +589,38 @@ export function HeroDemo() {
                 </p>
               )}
               <p className={styles.shelfFoot}>Text copies. Files drag.</p>
+              <span
+                className={styles.shelfDropAnchor}
+                data-demo-target="shelf-drop"
+              />
             </div>
+          </div>
+          {!workspace.shelfOpen && workspace.fileSaved && (
+            <span className={styles.closedNotice}>
+              Shelf closed. Your file is kept.
+            </span>
           )}
         </div>
+        {drag && (
+          <div
+            className={styles.liveDrag}
+            style={{
+              transform: `translate(${drag.point.x}px, ${drag.point.y}px)`,
+            }}
+            data-origin={drag.origin}
+            aria-hidden="true"
+          >
+            <div className={styles.carriedFile}>
+              <FileArtwork />
+              <span>{sampleFile}</span>
+              <b>+</b>
+            </div>
+          </div>
+        )}
         {state.kind === "watch" &&
           state.playback !== "ready" &&
-          !reducedMotion && (
-            <div
-              className={styles.cursor}
-              data-target={step?.target}
-              aria-hidden="true"
-            >
-              <svg width="25" height="30" viewBox="0 0 25 30">
-                <path
-                  d="m3 2 18 15-9 1-4 9Z"
-                  fill="#24282f"
-                  stroke="white"
-                  strokeWidth="2"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              <span>You</span>
-            </div>
-          )}
+          !reducedMotion &&
+          step && <GuidedPointer stage={stage} step={step} />}
       </div>
 
       <div className={styles.guide}>
@@ -433,12 +652,7 @@ export function HeroDemo() {
                 </button>
               )}
             {complete && (
-              <button
-                type="button"
-                onClick={() =>
-                  dispatch({ kind: "watch", manual: reducedMotion })
-                }
-              >
+              <button type="button" onClick={watchDemo}>
                 Replay
               </button>
             )}
@@ -453,18 +667,18 @@ export function HeroDemo() {
           {interactive
             ? workspace.hint
             : complete
-              ? "Now try it yourself. Copy the note, or move a file between windows."
+              ? "Your turn: collect, close, switch windows, reopen and drop."
               : step?.caption}
         </p>
         <div className={styles.progress} aria-hidden="true">
-          {["Collect", "Open shelf", "Switch", "Use"].map((label, index) => (
+          {["Collect", "Close", "Switch", "Drop"].map((label, index) => (
             <span
               key={label}
               data-done={
                 index === 0
                   ? workspace.textSaved || workspace.fileSaved
                   : index === 1
-                    ? workspace.shelfVisited
+                    ? workspace.shelfRetracted
                     : index === 2
                       ? workspace.destinationVisited
                       : workspace.pasted || workspace.attached

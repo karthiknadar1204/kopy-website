@@ -7,6 +7,7 @@ type Workspace = {
   window: "notes" | "message";
   shelfOpen: boolean;
   shelfVisited: boolean;
+  shelfRetracted: boolean;
   destinationVisited: boolean;
   textSaved: boolean;
   fileSaved: boolean;
@@ -24,6 +25,7 @@ export type TryAction =
   | { kind: "select-text" }
   | { kind: "save-file" }
   | { kind: "attach-file" }
+  | { kind: "cancel-drag" }
   | { kind: "paste" };
 
 function freshWorkspace(): Workspace {
@@ -31,13 +33,14 @@ function freshWorkspace(): Workspace {
     window: "notes",
     shelfOpen: false,
     shelfVisited: false,
+    shelfRetracted: false,
     destinationVisited: false,
     textSaved: false,
     fileSaved: false,
     clipboardText: false,
     pasted: false,
     attached: false,
-    hint: "Start with Copy text. Or drag the sample file to the left edge.",
+    hint: "Drag the PDF to the left edge. Close the shelf, switch to Message, then reopen it and drag the file out.",
   };
 }
 
@@ -51,14 +54,25 @@ function interact(workspace: Workspace, action: TryAction): Workspace {
         hint: "Copied. Open Kopy using the little handle on the left edge.",
       };
     case "open-shelf":
+      if (workspace.shelfOpen) return workspace;
       return {
         ...workspace,
         shelfOpen: true,
         shelfVisited: true,
-        hint: "Your shelf stays here when you switch windows. Choose Message above.",
+        hint: workspace.fileSaved
+          ? "Your file is still here. Drag it into Message, or move away to close the shelf."
+          : "Drop the sample PDF here, or copy the note. Move away to close the shelf.",
       };
     case "close-shelf":
-      return { ...workspace, shelfOpen: false };
+      if (!workspace.shelfOpen) return workspace;
+      return {
+        ...workspace,
+        shelfOpen: false,
+        shelfRetracted: workspace.shelfRetracted || workspace.shelfOpen,
+        hint: workspace.fileSaved
+          ? "Shelf closed. Your file stays saved. Switch to Message, then return to the left edge."
+          : "Shelf closed. Return to the left edge whenever you need it.",
+      };
     case "switch-window":
       return {
         ...workspace,
@@ -67,8 +81,8 @@ function interact(workspace: Workspace, action: TryAction): Workspace {
           workspace.destinationVisited || action.window === "message",
         hint:
           action.window === "notes"
-            ? "Copy the note, or add the sample file to your shelf."
-            : "Choose text from the shelf and paste it. Files can be dragged into the draft.",
+            ? "Drag the PDF to the edge, or try copying the note."
+            : "A new window. Reopen Kopy at the left edge, then drag your saved file into this draft.",
       };
     case "select-text":
       return workspace.textSaved
@@ -85,7 +99,7 @@ function interact(workspace: Workspace, action: TryAction): Workspace {
         fileSaved: true,
         shelfOpen: true,
         shelfVisited: true,
-        hint: "File on the shelf. Choose Message, then drag it in or use Attach file.",
+        hint: "File collected. Move away or close the shelf. Your file will stay there while you switch windows.",
       };
     case "attach-file":
       return workspace.fileSaved && workspace.window === "message"
@@ -93,11 +107,19 @@ function interact(workspace: Workspace, action: TryAction): Workspace {
             ...workspace,
             attached: true,
             shelfOpen: false,
+            shelfRetracted: true,
             hint: workspace.pasted
               ? "Text and file, together in your next window. That’s the handoff."
-              : "File attached to the sample draft. Try copying the note, too.",
+              : "File dropped into the draft. The shelf closes and your saved file stays available.",
           }
         : workspace;
+    case "cancel-drag":
+      return {
+        ...workspace,
+        hint: workspace.fileSaved
+          ? "Drag cancelled. Your file is still on the shelf."
+          : "Drag cancelled. Nothing was added. Try dragging the PDF onto the shelf.",
+      };
     case "paste":
       return workspace.clipboardText && workspace.window === "message"
         ? {
@@ -116,73 +138,166 @@ function interact(workspace: Workspace, action: TryAction): Workspace {
   }
 }
 
-type TourStep = {
+export type DemoTarget =
+  | "source-file"
+  | "edge"
+  | "shelf-drop"
+  | "shelf-file"
+  | "outside"
+  | "message"
+  | "draft";
+export type DragOrigin = "source" | "shelf";
+export type DemoPoint = { x: number; y: number };
+type DemoBounds = DemoPoint & { width: number; height: number };
+
+export function demoFileDrop({
+  origin,
+  point,
+  edge,
+  shelf,
+  destination,
+}: {
+  origin: DragOrigin;
+  point: DemoPoint;
+  edge: DemoBounds;
+  shelf: DemoBounds | null;
+  destination: DemoBounds | null;
+}): TryAction {
+  function contains(bounds: DemoBounds | null) {
+    return (
+      bounds !== null &&
+      point.x >= bounds.x &&
+      point.x <= bounds.x + bounds.width &&
+      point.y >= bounds.y &&
+      point.y <= bounds.y + bounds.height
+    );
+  }
+  if (contains(edge) || contains(shelf)) return { kind: "save-file" };
+  if (origin === "shelf" && contains(destination))
+    return { kind: "attach-file" };
+  return { kind: "cancel-drag" };
+}
+
+export type TourStep = {
   caption: string;
-  target: "copy" | "edge" | "message" | "snippet" | "paste";
+  target: DemoTarget;
+  carrying: DragOrigin | null;
   action: TryAction | null;
   duration: number;
 };
 
 export const tour: readonly TourStep[] = [
   {
-    caption: "A note in one window. Somewhere to use it next.",
-    target: "copy",
+    caption: "Take a file from the window you’re working in.",
+    target: "source-file",
+    carrying: null,
     action: null,
     duration: 1100,
   },
   {
-    caption: "Copy something worth keeping.",
-    target: "copy",
-    action: { kind: "copy-text" },
-    duration: 1400,
-  },
-  {
-    caption: "Move to the edge of your screen.",
-    target: "edge",
+    caption: "Pick it up and keep holding.",
+    target: "source-file",
+    carrying: "source",
     action: null,
     duration: 800,
   },
   {
-    caption: "Your useful things are right here.",
+    caption: "Drag it to the little handle at the edge.",
     target: "edge",
+    carrying: "source",
+    action: null,
+    duration: 1000,
+  },
+  {
+    caption: "Keep holding. The shelf slides open.",
+    target: "edge",
+    carrying: "source",
     action: { kind: "open-shelf" },
+    duration: 900,
+  },
+  {
+    caption: "Move the file onto the shelf…",
+    target: "shelf-drop",
+    carrying: "source",
+    action: null,
+    duration: 900,
+  },
+  {
+    caption: "…then let go. It’s collected, ready for later.",
+    target: "shelf-file",
+    carrying: null,
+    action: { kind: "save-file" },
     duration: 1500,
+  },
+  {
+    caption: "Move away from the shelf.",
+    target: "outside",
+    carrying: null,
+    action: null,
+    duration: 900,
+  },
+  {
+    caption: "It slides closed. Your file stays on the shelf.",
+    target: "outside",
+    carrying: null,
+    action: { kind: "close-shelf" },
+    duration: 1600,
   },
   {
     caption: "Find your next window.",
     target: "message",
+    carrying: null,
     action: null,
     duration: 800,
   },
   {
-    caption: "The shelf comes with you.",
+    caption: "A new window. The same little handle at the edge.",
     target: "message",
+    carrying: null,
     action: { kind: "switch-window", window: "message" },
+    duration: 1300,
+  },
+  {
+    caption: "Return to the edge when you need your file.",
+    target: "edge",
+    carrying: null,
+    action: null,
+    duration: 900,
+  },
+  {
+    caption: "Your file is still right here.",
+    target: "edge",
+    carrying: null,
+    action: { kind: "open-shelf" },
     duration: 1400,
   },
   {
-    caption: "Pick the words you want to reuse.",
-    target: "snippet",
+    caption: "Find the file you set down earlier.",
+    target: "shelf-file",
+    carrying: null,
     action: null,
     duration: 800,
   },
   {
-    caption: "Ready to paste.",
-    target: "snippet",
-    action: { kind: "select-text" },
-    duration: 1100,
-  },
-  {
-    caption: "Put them in your next window.",
-    target: "paste",
+    caption: "Pick it up from the shelf.",
+    target: "shelf-file",
+    carrying: "shelf",
     action: null,
     duration: 800,
   },
   {
-    caption: "A small handoff. A little less friction.",
-    target: "paste",
-    action: { kind: "paste" },
-    duration: 1700,
+    caption: "Keep holding and drag it into your next window.",
+    target: "draft",
+    carrying: "shelf",
+    action: null,
+    duration: 1400,
+  },
+  {
+    caption: "Drop it. The file arrives, and the shelf gets out of your way.",
+    target: "draft",
+    carrying: null,
+    action: { kind: "attach-file" },
+    duration: 1800,
   },
 ];
 
