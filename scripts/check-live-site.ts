@@ -58,6 +58,18 @@ for (const path of paths) {
           /<meta[^>]+name="robots"[^>]+content="[^"]*noindex/,
           `${path}: preview HTML must remain noindex`,
         );
+        if (path !== "/purchase-complete") {
+          const canonical = content.match(
+            /<link\b(?=[^>]*\brel="canonical")[^>]*>/,
+          )?.[0];
+          const canonicalHref = canonical?.match(/\bhref="([^"]+)"/)?.[1];
+          assert.ok(canonicalHref, `${path}: canonical URL is missing`);
+          assert.equal(
+            new URL(canonicalHref).href,
+            new URL(path, origin).href,
+            `${path}: canonical must match the public HTML URL`,
+          );
+        }
         for (const match of content.matchAll(/href="(\/[^"?]*)"/g)) {
           const linkedPath = new URL(match[1], origin).pathname;
           if (
@@ -72,11 +84,13 @@ for (const path of paths) {
         }
       }
       if (path === "/sitemap.xml") {
-        const sitemapPaths = [...content.matchAll(/<loc>([^<]+)<\/loc>/g)].map(
-          (match) => new URL(match[1]).pathname,
+        const sitemapUrls = [...content.matchAll(/<loc>([^<]+)<\/loc>/g)].map(
+          (match) => new URL(match[1]),
         );
+        for (const url of sitemapUrls)
+          assert.equal(url.origin, origin.origin, "Sitemap origin must match the public site");
         assert.deepEqual(
-          sitemapPaths.sort(),
+          sitemapUrls.map((url) => url.pathname).sort(),
           documents.map((document) => document.path).sort(),
           "Sitemap must contain canonical public HTML documents only",
         );

@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 export default function Buy() {
   const checkout = testCheckout(process.env.DODO_TEST_CHECKOUT_URL);
   return (
-    <main id="main" className="buy-page wrap">
+    <main id="main" tabIndex={-1} className="buy-page wrap">
       <div className="purchase-card">
         <Image src="/images/kopy-icon.png" alt="" width={76} height={76} />
         <p className="availability">

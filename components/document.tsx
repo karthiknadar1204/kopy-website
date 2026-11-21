@@ -46,7 +46,7 @@ export function Content({ blocks }: { blocks: ContentBlock[] }) {
 
 export function DocumentPage({ document }: { document: PublicDocument }) {
   return (
-    <main id="main" className="article wrap">
+    <main id="main" tabIndex={-1} className="article wrap">
       <div className="article-heading">
         <Link
           className="back-link"

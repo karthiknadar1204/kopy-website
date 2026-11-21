@@ -26,7 +26,7 @@ export default function Home() {
     image: absolute("/images/kopy-history-light.png"),
   };
   return (
-    <main id="main">
+    <main id="main" tabIndex={-1}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

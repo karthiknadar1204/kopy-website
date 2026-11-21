@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 };
 export default function PurchaseComplete() {
   return (
-    <main id="main" className="article wrap">
+    <main id="main" tabIndex={-1} className="article wrap">
       <div className="article-heading">
         <p className="availability">
           <span />
